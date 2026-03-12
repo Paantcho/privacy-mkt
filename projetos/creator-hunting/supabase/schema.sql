@@ -16,6 +16,7 @@ create table if not exists public.creators (
   respondido   boolean not null default false,
   status       text not null default 'Contatada',
   obs          text,
+  archived     boolean not null default false,
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()
 );
@@ -48,3 +49,7 @@ create index if not exists creators_status_idx     on public.creators(status);
 create index if not exists creators_tier_idx       on public.creators(tier);
 create index if not exists creators_segmento_idx   on public.creators(segmento);
 create index if not exists creators_created_at_idx on public.creators(created_at desc);
+create index if not exists creators_archived_idx   on public.creators(archived);
+
+-- Migração (se a tabela já existir): adicionar coluna archived
+-- alter table public.creators add column if not exists archived boolean not null default false;

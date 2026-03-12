@@ -110,12 +110,12 @@ export function NovaProspeccaoForm() {
   }
 
   return (
-    <div className="rounded-[20px] bg-white overflow-hidden">
+    <div className="rounded-[20px] bg-white">
       {/* Header colapsável */}
       <motion.button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-2 px-6 py-4 text-left"
+        className="flex w-full items-center gap-2 px-6 py-4 text-left rounded-[20px]"
         whileHover={{ backgroundColor: "rgba(244,238,229,0.5)" }}
         whileTap={{ scale: 0.99 }}
         transition={{ duration: 0.12 }}
@@ -139,7 +139,7 @@ export function NovaProspeccaoForm() {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25, ease: [0, 0, 0.2, 1] }}
-            style={{ overflow: "hidden" }}
+            style={{ overflow: "clip" }}
           >
             <form onSubmit={handleSubmit} className="px-6 pb-6">
               <div className="mb-4 h-px" style={{ background: "rgba(35,32,31,0.06)" }} />

@@ -20,29 +20,34 @@ function getServer() {
   return createClient(SUPABASE_URL, SUPABASE_KEY);
 }
 
+function revalidateAll() {
+  revalidatePath("/planilha");
+  revalidatePath("/dashboard");
+  revalidatePath("/timeline");
+}
+
 export async function getCreators(): Promise<Creator[]> {
-  if (!isSupabaseConfigured()) return MOCK_CREATORS;
+  if (!isSupabaseConfigured()) return MOCK_CREATORS.filter((c) => !c.archived);
 
   const supabase = getServer();
   const { data, error } = await supabase
     .from("creators")
     .select("*")
+    .eq("archived", false)
     .order("created_at", { ascending: false });
 
   if (error) {
     console.error("getCreators error:", error);
-    return MOCK_CREATORS;
+    return MOCK_CREATORS.filter((c) => !c.archived);
   }
   return (data as Creator[]) ?? [];
 }
 
 export async function createCreator(payload: CreatorInsert): Promise<{ ok: boolean; error?: string }> {
   const supabase = getServer();
-  const { error } = await supabase.from("creators").insert([payload]);
+  const { error } = await supabase.from("creators").insert([{ ...payload, archived: false }]);
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/planilha");
-  revalidatePath("/dashboard");
-  revalidatePath("/timeline");
+  revalidateAll();
   return { ok: true };
 }
 
@@ -56,18 +61,27 @@ export async function updateCreator(
     .update({ ...payload, updated_at: new Date().toISOString() })
     .eq("id", id);
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/planilha");
-  revalidatePath("/dashboard");
-  revalidatePath("/timeline");
+  revalidateAll();
   return { ok: true };
 }
 
+/* Soft delete — marca archived = true, dado preservado no banco */
+export async function archiveCreators(ids: string[]): Promise<{ ok: boolean; error?: string }> {
+  const supabase = getServer();
+  const { error } = await supabase
+    .from("creators")
+    .update({ archived: true, updated_at: new Date().toISOString() })
+    .in("id", ids);
+  if (error) return { ok: false, error: error.message };
+  revalidateAll();
+  return { ok: true };
+}
+
+/* Hard delete — reservado para uso interno/admin */
 export async function deleteCreators(ids: string[]): Promise<{ ok: boolean; error?: string }> {
   const supabase = getServer();
   const { error } = await supabase.from("creators").delete().in("id", ids);
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/planilha");
-  revalidatePath("/dashboard");
-  revalidatePath("/timeline");
+  revalidateAll();
   return { ok: true };
 }

@@ -39,12 +39,13 @@ export interface Creator {
   respondido: boolean;
   status: Status;
   obs: string | null;
+  archived: boolean;
   created_at: string;
   updated_at: string;
 }
 
-export type CreatorInsert = Omit<Creator, "id" | "created_at" | "updated_at">;
-export type CreatorUpdate = Partial<CreatorInsert>;
+export type CreatorInsert = Omit<Creator, "id" | "created_at" | "updated_at" | "archived">;
+export type CreatorUpdate = Partial<Omit<Creator, "id" | "created_at">>;
 
 /* ── Constantes de opções ─────────────────────────────────────── */
 

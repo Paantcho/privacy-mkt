@@ -2,12 +2,12 @@
 
 import { useState, useTransition, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trash2, ExternalLink, Check } from "lucide-react";
+import { Archive, ExternalLink, Check } from "lucide-react";
 import {
   CANAIS, PAISES, TIERS, SEGMENTOS, STATUS_LIST, ANALISTAS, STATUS_STYLE,
   type Creator, type Canal, type Pais, type Tier, type Segmento, type Status, type Analista,
 } from "@/types/creator";
-import { updateCreator, deleteCreators } from "@/lib/actions/creators";
+import { updateCreator, archiveCreators } from "@/lib/actions/creators";
 import { InlineSelect } from "./inline-select";
 import { useToast } from "@/components/ui/toast";
 
@@ -177,11 +177,16 @@ export function CreatorsTable({ creators }: { creators: Creator[] }) {
     });
   }
 
-  function deleteSelected() {
+  function archiveSelected() {
     startTransition(async () => {
-      const res = await deleteCreators([...selected]);
-      if (res.ok) { toast.success(`${selected.size} creator(s) removido(s)`); setSelected(new Set()); }
-      else toast.error(res.error ?? "Erro ao remover");
+      const count = selected.size;
+      const res = await archiveCreators([...selected]);
+      if (res.ok) {
+        toast.success(`${count} creator(s) arquivado(s) — dados preservados no banco`);
+        setSelected(new Set());
+      } else {
+        toast.error(res.error ?? "Erro ao arquivar");
+      }
     });
   }
 
@@ -200,13 +205,13 @@ export function CreatorsTable({ creators }: { creators: Creator[] }) {
             <span className="text-[13px] font-semibold text-ink-500">{selected.size} selecionado(s)</span>
             <motion.button
               type="button"
-              onClick={deleteSelected}
+              onClick={archiveSelected}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.96 }}
               transition={{ duration: 0.15, ease: [0.34, 1.56, 0.64, 1] }}
-              className="ml-auto flex items-center gap-1.5 rounded-[10px] bg-red-50 px-3 py-1.5 text-[13px] font-semibold text-red-600"
+              className="ml-auto flex items-center gap-1.5 rounded-[10px] bg-[#F4EEE5] px-3 py-1.5 text-[13px] font-semibold text-[#A08E7E]"
             >
-              <Trash2 size={13} /> Remover selecionados
+              <Archive size={13} /> Arquivar selecionados
             </motion.button>
           </motion.div>
         )}

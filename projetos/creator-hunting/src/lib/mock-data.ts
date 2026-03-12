@@ -21,6 +21,7 @@ export const MOCK_CREATORS: Creator[] = [
     status: "Ativou",
     obs: "Super engajada, topou na hora",
     created_at: daysAgo(1),
+    archived: false,
     updated_at: daysAgo(0),
   },
   {
@@ -37,6 +38,7 @@ export const MOCK_CREATORS: Creator[] = [
     status: "Contatada",
     obs: null,
     created_at: daysAgo(2),
+    archived: false,
     updated_at: daysAgo(2),
   },
   {
@@ -53,6 +55,7 @@ export const MOCK_CREATORS: Creator[] = [
     status: "Interessa",
     obs: "Pediu proposta comercial",
     created_at: daysAgo(3),
+    archived: false,
     updated_at: daysAgo(1),
   },
   {
@@ -69,6 +72,7 @@ export const MOCK_CREATORS: Creator[] = [
     status: "Negociando",
     obs: "Aguardando resposta do jurídico",
     created_at: daysAgo(4),
+    archived: false,
     updated_at: daysAgo(2),
   },
   {
@@ -85,6 +89,7 @@ export const MOCK_CREATORS: Creator[] = [
     status: "Prospectada",
     obs: null,
     created_at: daysAgo(5),
+    archived: false,
     updated_at: daysAgo(5),
   },
   {
@@ -101,6 +106,7 @@ export const MOCK_CREATORS: Creator[] = [
     status: "Respondeu",
     obs: "Gostou do serviço, quer mais infos",
     created_at: daysAgo(6),
+    archived: false,
     updated_at: daysAgo(4),
   },
   {
@@ -117,6 +123,7 @@ export const MOCK_CREATORS: Creator[] = [
     status: "Prospectada",
     obs: null,
     created_at: daysAgo(7),
+    archived: false,
     updated_at: daysAgo(7),
   },
   {
@@ -133,6 +140,7 @@ export const MOCK_CREATORS: Creator[] = [
     status: "Não quis",
     obs: "Disse que não tem interesse no momento",
     created_at: daysAgo(8),
+    archived: false,
     updated_at: daysAgo(6),
   },
   {
@@ -149,6 +157,7 @@ export const MOCK_CREATORS: Creator[] = [
     status: "Contatada",
     obs: null,
     created_at: daysAgo(9),
+    archived: false,
     updated_at: daysAgo(9),
   },
   {
@@ -165,6 +174,7 @@ export const MOCK_CREATORS: Creator[] = [
     status: "Contatada",
     obs: "Espanhol — contato via DM",
     created_at: daysAgo(10),
+    archived: false,
     updated_at: daysAgo(10),
   },
   {
@@ -181,6 +191,7 @@ export const MOCK_CREATORS: Creator[] = [
     status: "Já tem conta",
     obs: "Já é cliente desde 2024",
     created_at: daysAgo(12),
+    archived: false,
     updated_at: daysAgo(12),
   },
   {
@@ -197,6 +208,7 @@ export const MOCK_CREATORS: Creator[] = [
     status: "Ativou",
     obs: null,
     created_at: daysAgo(13),
+    archived: false,
     updated_at: daysAgo(11),
   },
   {
@@ -213,6 +225,7 @@ export const MOCK_CREATORS: Creator[] = [
     status: "Interessa",
     obs: "Quer proposta para 3 meses",
     created_at: daysAgo(14),
+    archived: false,
     updated_at: daysAgo(10),
   },
   {
@@ -229,6 +242,7 @@ export const MOCK_CREATORS: Creator[] = [
     status: "Prospectada",
     obs: null,
     created_at: daysAgo(15),
+    archived: false,
     updated_at: daysAgo(15),
   },
   {
@@ -245,6 +259,7 @@ export const MOCK_CREATORS: Creator[] = [
     status: "Contatada",
     obs: null,
     created_at: daysAgo(16),
+    archived: false,
     updated_at: daysAgo(16),
   },
   {
@@ -261,6 +276,7 @@ export const MOCK_CREATORS: Creator[] = [
     status: "Negociando",
     obs: "High value — prioridade",
     created_at: daysAgo(18),
+    archived: false,
     updated_at: daysAgo(14),
   },
   {
@@ -277,6 +293,7 @@ export const MOCK_CREATORS: Creator[] = [
     status: "Respondeu",
     obs: "Interesse em plano mensal",
     created_at: daysAgo(20),
+    archived: false,
     updated_at: daysAgo(18),
   },
   {
@@ -293,6 +310,7 @@ export const MOCK_CREATORS: Creator[] = [
     status: "Prospectada",
     obs: null,
     created_at: daysAgo(22),
+    archived: false,
     updated_at: daysAgo(22),
   },
   {
@@ -309,6 +327,7 @@ export const MOCK_CREATORS: Creator[] = [
     status: "Ativou",
     obs: "Converteu rápido",
     created_at: daysAgo(25),
+    archived: false,
     updated_at: daysAgo(23),
   },
 ];
