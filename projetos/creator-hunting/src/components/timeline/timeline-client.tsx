@@ -31,7 +31,28 @@ function formatDayLabel(dateStr: string): string {
 const MONTHS = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
                 "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
-/* ── Dropdown via Portal — evita corte por overflow do layout ────── */
+/* ── FilterPill — idêntico ao Dashboard ─────────────────────────── */
+function FilterPill({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      initial={false}
+      animate={{
+        backgroundColor: active ? "#23201F" : "rgba(0,0,0,0)",
+        color: active ? "#FFFFFF" : "#A08E7E",
+      }}
+      whileHover={!active ? { backgroundColor: "rgba(213,203,192,0.4)", color: "#23201F" } : undefined}
+      whileTap={{ scale: 0.97 }}
+      transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+      className="rounded-[20px] px-3.5 py-1.5 text-[13px] font-bold whitespace-nowrap"
+    >
+      {label}
+    </motion.button>
+  );
+}
+
+/* ── FilterDropdown — charcoal ativo + Portal ────────────────────── */
 function FilterDropdown({
   label, options, value, onChange,
 }: {
@@ -44,15 +65,14 @@ function FilterDropdown({
   const [coords, setCoords] = useState({ top: 0, left: 0 });
   const btnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const isActive = !!value;
-  const displayLabel = isActive
+  const displayLabel = value
     ? (options.find((o) => o.value === value)?.label ?? label)
     : label;
 
   function openMenu() {
     if (!btnRef.current) return;
     const r = btnRef.current.getBoundingClientRect();
-    setCoords({ top: r.bottom + window.scrollY + 6, left: r.left + window.scrollX });
+    setCoords({ top: r.bottom + window.scrollY + 4, left: r.left + window.scrollX });
     setOpen(true);
   }
 
@@ -86,9 +106,9 @@ function FilterDropdown({
             top: coords.top,
             left: coords.left,
             zIndex: 9999,
-            minWidth: 180,
+            minWidth: 170,
             background: "#FFFFFF",
-            borderRadius: 14,
+            borderRadius: 12,
             border: "1px solid rgba(35,32,31,0.08)",
             padding: "6px 0",
           }}
@@ -98,15 +118,13 @@ function FilterDropdown({
             onClick={() => { onChange(""); setOpen(false); }}
             whileHover={{ backgroundColor: "#F4EEE5" }}
             transition={{ duration: 0.1 }}
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-semibold"
-            style={{ color: !value ? "#F68D3D" : "#A08E7E" }}
+            className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[13px] font-semibold text-[#A08E7E]"
           >
-            <span className="w-4 shrink-0" style={{ color: "#F68D3D" }}>
-              {!value && <Check size={12} />}
+            <span className="w-4 shrink-0">
+              {!value && <Check size={12} className="text-primary-500" />}
             </span>
             Todos
           </motion.button>
-          <div className="mx-3 mb-1 h-px" style={{ background: "rgba(35,32,31,0.06)" }} />
           {options.map((opt) => (
             <motion.button
               key={opt.value}
@@ -114,10 +132,10 @@ function FilterDropdown({
               onClick={() => { onChange(opt.value === value ? "" : opt.value); setOpen(false); }}
               whileHover={{ backgroundColor: "#F4EEE5" }}
               transition={{ duration: 0.1 }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-semibold text-ink-500"
+              className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[13px] font-semibold text-ink-500"
             >
-              <span className="w-4 shrink-0" style={{ color: "#F68D3D" }}>
-                {opt.value === value && <Check size={12} />}
+              <span className="w-4 shrink-0">
+                {opt.value === value && <Check size={12} className="text-primary-500" />}
               </span>
               {opt.label}
             </motion.button>
@@ -135,21 +153,17 @@ function FilterDropdown({
         onClick={openMenu}
         initial={false}
         animate={{
-          backgroundColor: isActive ? "#F68D3D" : "rgba(246,141,61,0.18)",
-          color: isActive ? "#FFFFFF" : "#C96B1A",
+          backgroundColor: value ? "#23201F" : "rgba(0,0,0,0)",
+          color: value ? "#FFFFFF" : "#A08E7E",
         }}
-        whileHover={!isActive ? { backgroundColor: "rgba(246,141,61,0.30)" } : { opacity: 0.9 }}
+        whileHover={!value ? { backgroundColor: "rgba(213,203,192,0.4)", color: "#23201F" } : undefined}
         whileTap={{ scale: 0.97 }}
         transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
-        className="flex items-center gap-1.5 rounded-[20px] px-4 py-2 text-[13px] font-bold whitespace-nowrap"
+        className="flex items-center gap-1.5 rounded-[20px] px-3.5 py-1.5 text-[13px] font-bold whitespace-nowrap"
       >
         {displayLabel}
-        <motion.span
-          animate={{ rotate: open ? 180 : 0 }}
-          transition={{ duration: 0.18 }}
-          className="opacity-70"
-        >
-          <ChevronDown size={12} />
+        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.18 }}>
+          <ChevronDown size={12} className="opacity-60" />
         </motion.span>
       </motion.button>
       {typeof document !== "undefined" && createPortal(menu, document.body)}
@@ -209,61 +223,62 @@ export function TimelineClient({ creators }: Props) {
         </p>
       </div>
 
-      {/* ── Barra de filtros — laranja muito claro (subtom) ─────────── */}
-      <div
-        className="mb-4 rounded-[20px] px-4 py-3"
-        style={{ background: "rgba(246,141,61,0.10)" }}
-      >
-        <div
-          className="flex items-center gap-2 overflow-x-auto"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-        >
+      {/* ── Barra de filtros — idêntica ao Dashboard ─────────────── */}
+      <div className="mb-4 rounded-[20px] bg-white p-4">
+        <div className="flex flex-wrap items-center gap-3">
+
+          {/* Analistas — pills em grupo bg-base-200 */}
+          <div className="flex items-center gap-1 rounded-[16px] bg-base-200 px-2 py-1">
+            <FilterPill label="Todos" active={!analista} onClick={() => setAnalista("")} />
+            {ANALISTAS.map((a) => (
+              <FilterPill key={a} label={a} active={analista === a} onClick={() => setAnalista(analista === a ? "" : a)} />
+            ))}
+          </div>
+
+          <div className="h-6 w-px" style={{ background: "rgba(35,32,31,0.08)" }} />
+
+          {/* Ano + Mês — dropdowns */}
           <FilterDropdown
             label="Ano" value={ano} onChange={setAno}
             options={anosDisponiveis.map((a) => ({ label: a, value: a }))}
           />
-          <div className="h-4 w-px shrink-0" style={{ background: "rgba(246,141,61,0.30)" }} />
           <FilterDropdown
             label="Mês" value={mes} onChange={setMes}
             options={MONTHS.map((m, i) => ({ label: m, value: String(i) }))}
           />
-          <div className="h-4 w-px shrink-0" style={{ background: "rgba(246,141,61,0.30)" }} />
+
+          <div className="h-6 w-px" style={{ background: "rgba(35,32,31,0.08)" }} />
+
+          {/* Canal + Status — dropdowns */}
           <FilterDropdown
             label="Canal" value={canal} onChange={setCanal}
             options={CANAIS.map((c) => ({ label: c, value: c }))}
           />
-          <div className="h-4 w-px shrink-0" style={{ background: "rgba(246,141,61,0.30)" }} />
-          <FilterDropdown
-            label="Analista" value={analista} onChange={setAnalista}
-            options={ANALISTAS.map((a) => ({ label: a, value: a }))}
-          />
-          <div className="h-4 w-px shrink-0" style={{ background: "rgba(246,141,61,0.30)" }} />
           <FilterDropdown
             label="Status" value={status} onChange={setStatus}
             options={STATUS_LIST.map((s) => ({ label: s, value: s }))}
           />
 
+          {/* Limpar */}
           <AnimatePresence>
             {hasFilters && (
               <motion.button
-                initial={{ opacity: 0, scale: 0.85 }}
+                initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.85 }}
+                exit={{ opacity: 0, scale: 0.9 }}
                 type="button"
                 onClick={clearAll}
-                whileHover={{ backgroundColor: "rgba(246,141,61,0.20)" }}
-                whileTap={{ scale: 0.96 }}
+                whileHover={{ color: "#23201F" }}
                 transition={{ duration: 0.15 }}
-                className="ml-auto flex shrink-0 items-center gap-1 rounded-[20px] px-3 py-2 text-[12px] font-bold"
-                style={{ color: "#C96B1A" }}
+                className="text-[12px] font-bold text-[#A08E7E] underline underline-offset-2"
               >
-                <X size={11} />
-                Limpar
+                Limpar filtros
               </motion.button>
             )}
           </AnimatePresence>
         </div>
 
+        {/* Contador */}
         <AnimatePresence>
           {hasFilters && (
             <motion.p
@@ -271,14 +286,10 @@ export function TimelineClient({ creators }: Props) {
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.18 }}
-              className="mt-2 pt-2 text-[12px] font-semibold"
-              style={{
-                borderTop: "1px solid rgba(246,141,61,0.20)",
-                color: "#C96B1A",
-              }}
+              className="mt-2 pt-2 text-[12px] font-semibold text-[#A08E7E]"
+              style={{ borderTop: "1px solid rgba(35,32,31,0.05)" }}
             >
-              <span className="font-bold" style={{ color: "#D97A33" }}>{filtered.length}</span>
-              {" "}de {creators.length} registros
+              <span className="font-bold text-ink-500">{filtered.length}</span> de {creators.length} registros
             </motion.p>
           )}
         </AnimatePresence>
