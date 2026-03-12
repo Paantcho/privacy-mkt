@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Archive, ExternalLink, Check } from "lucide-react";
 import {
@@ -14,25 +15,87 @@ import { useToast } from "@/components/ui/toast";
 const TH = "px-3 py-3 text-left text-[11px] font-bold uppercase tracking-[0.4px] text-[#A08E7E] whitespace-nowrap";
 const TD = "px-3 py-2";
 
-/* ── Status Badge com dropdown ──────────────────────────────────── */
+/* ── Status Badge com dropdown via Portal (evita overflow clip da tabela) ── */
 function StatusDropdown({ status, onChange }: { status: Status; onChange: (v: Status) => void }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState({ top: 0, left: 0 });
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const s = STATUS_STYLE[status];
 
+  function openMenu() {
+    if (!btnRef.current) return;
+    const rect = btnRef.current.getBoundingClientRect();
+    setCoords({ top: rect.bottom + window.scrollY + 4, left: rect.left + window.scrollX });
+    setOpen(true);
+  }
+
   useEffect(() => {
+    if (!open) return;
     function onOut(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (btnRef.current?.contains(target) || menuRef.current?.contains(target)) return;
+      setOpen(false);
     }
+    function onScroll() { setOpen(false); }
     document.addEventListener("mousedown", onOut);
-    return () => document.removeEventListener("mousedown", onOut);
-  }, []);
+    document.addEventListener("scroll", onScroll, true);
+    return () => {
+      document.removeEventListener("mousedown", onOut);
+      document.removeEventListener("scroll", onScroll, true);
+    };
+  }, [open]);
+
+  const menu = (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          ref={menuRef}
+          initial={{ opacity: 0, y: -4, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -4, scale: 0.97 }}
+          transition={{ duration: 0.14, ease: [0, 0, 0.2, 1] }}
+          style={{
+            position: "absolute",
+            top: coords.top,
+            left: coords.left,
+            zIndex: 9999,
+            minWidth: 180,
+            background: "#FFFFFF",
+            borderRadius: 12,
+            border: "1px solid rgba(35,32,31,0.08)",
+            padding: "6px 0",
+            pointerEvents: "auto",
+          }}
+        >
+          {STATUS_LIST.map((opt) => {
+            const os = STATUS_STYLE[opt];
+            return (
+              <motion.button
+                key={opt}
+                type="button"
+                onClick={() => { onChange(opt); setOpen(false); }}
+                whileHover={{ backgroundColor: "#F4EEE5" }}
+                transition={{ duration: 0.1 }}
+                className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[13px] font-semibold text-ink-500"
+              >
+                <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: os.dot }} />
+                <span className="flex-1">{opt}</span>
+                {opt === status && <Check size={11} className="text-primary-500 shrink-0" />}
+              </motion.button>
+            );
+          })}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 
   return (
-    <div ref={ref} className="relative">
+    <>
       <motion.button
+        ref={btnRef}
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={openMenu}
         whileHover={{ opacity: 0.85 }}
         whileTap={{ scale: 0.97 }}
         className="flex items-center gap-1.5 rounded-[8px] px-2.5 py-1 text-[12px] font-bold whitespace-nowrap"
@@ -41,38 +104,8 @@ function StatusDropdown({ status, onChange }: { status: Status; onChange: (v: St
         <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: s.dot }} />
         {status}
       </motion.button>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -4, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -4, scale: 0.97 }}
-            transition={{ duration: 0.14, ease: [0, 0, 0.2, 1] }}
-            className="absolute left-0 top-full z-50 mt-1 min-w-[170px] overflow-hidden rounded-[12px] bg-white py-1.5"
-            style={{ border: "1px solid rgba(35,32,31,0.08)" }}
-          >
-            {STATUS_LIST.map((opt) => {
-              const os = STATUS_STYLE[opt];
-              return (
-                <motion.button
-                  key={opt}
-                  type="button"
-                  onClick={() => { onChange(opt); setOpen(false); }}
-                  whileHover={{ backgroundColor: "#F4EEE5" }}
-                  transition={{ duration: 0.1 }}
-                  className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[13px] font-semibold text-ink-500"
-                >
-                  <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: os.dot }} />
-                  <span className="flex-1">{opt}</span>
-                  {opt === status && <Check size={11} className="text-primary-500 shrink-0" />}
-                </motion.button>
-              );
-            })}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+      {typeof document !== "undefined" && createPortal(menu, document.body)}
+    </>
   );
 }
 
