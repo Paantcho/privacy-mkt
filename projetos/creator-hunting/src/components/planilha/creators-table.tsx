@@ -1,46 +1,91 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
+import { useState, useTransition, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trash2, ExternalLink } from "lucide-react";
+import { Trash2, ExternalLink, Check } from "lucide-react";
 import {
-  CANAIS, PAISES, TIERS, SEGMENTOS, STATUS_LIST, ANALISTAS, STATUS_COLORS,
+  CANAIS, PAISES, TIERS, SEGMENTOS, STATUS_LIST, ANALISTAS, STATUS_STYLE,
   type Creator, type Canal, type Pais, type Tier, type Segmento, type Status, type Analista,
 } from "@/types/creator";
 import { updateCreator, deleteCreators } from "@/lib/actions/creators";
 import { InlineSelect } from "./inline-select";
 import { useToast } from "@/components/ui/toast";
 
-interface Props {
-  creators: Creator[];
-}
-
-const TH = "px-3 py-2.5 text-left text-[11px] font-bold uppercase tracking-[0.4px] text-[#A08E7E] whitespace-nowrap";
+const TH = "px-3 py-3 text-left text-[11px] font-bold uppercase tracking-[0.4px] text-[#A08E7E] whitespace-nowrap";
 const TD = "px-3 py-2";
 
+/* ── Status Badge com dropdown ──────────────────────────────────── */
+function StatusDropdown({ status, onChange }: { status: Status; onChange: (v: Status) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const s = STATUS_STYLE[status];
+
+  useEffect(() => {
+    function onOut(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onOut);
+    return () => document.removeEventListener("mousedown", onOut);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <motion.button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        whileHover={{ opacity: 0.85 }}
+        whileTap={{ scale: 0.97 }}
+        className="flex items-center gap-1.5 rounded-[8px] px-2.5 py-1 text-[12px] font-bold whitespace-nowrap"
+        style={{ backgroundColor: s.bg, color: s.color }}
+      >
+        <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: s.dot }} />
+        {status}
+      </motion.button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -4, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.97 }}
+            transition={{ duration: 0.14, ease: [0, 0, 0.2, 1] }}
+            className="absolute left-0 top-full z-50 mt-1 min-w-[170px] overflow-hidden rounded-[12px] bg-white py-1.5"
+            style={{ border: "1px solid rgba(35,32,31,0.08)" }}
+          >
+            {STATUS_LIST.map((opt) => {
+              const os = STATUS_STYLE[opt];
+              return (
+                <motion.button
+                  key={opt}
+                  type="button"
+                  onClick={() => { onChange(opt); setOpen(false); }}
+                  whileHover={{ backgroundColor: "#F4EEE5" }}
+                  transition={{ duration: 0.1 }}
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[13px] font-semibold text-ink-500"
+                >
+                  <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: os.dot }} />
+                  <span className="flex-1">{opt}</span>
+                  {opt === status && <Check size={11} className="text-primary-500 shrink-0" />}
+                </motion.button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* ── Texto editável ─────────────────────────────────────────────── */
 function EditableText({
-  value,
-  onSave,
-  placeholder,
-}: {
-  value: string | null;
-  onSave: (v: string) => void;
-  placeholder?: string;
-}) {
+  value, onSave, placeholder,
+}: { value: string | null; onSave: (v: string) => void; placeholder?: string }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value ?? "");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  function startEdit() {
-    setDraft(value ?? "");
-    setEditing(true);
-    setTimeout(() => inputRef.current?.focus(), 0);
-  }
-
-  function commit() {
-    setEditing(false);
-    if (draft !== (value ?? "")) onSave(draft);
-  }
+  function startEdit() { setDraft(value ?? ""); setEditing(true); setTimeout(() => inputRef.current?.focus(), 0); }
+  function commit() { setEditing(false); if (draft !== (value ?? "")) onSave(draft); }
 
   if (editing) {
     return (
@@ -60,32 +105,69 @@ function EditableText({
     <motion.button
       type="button"
       onClick={startEdit}
-      whileHover={{ backgroundColor: "rgba(213,203,192,0.3)" }}
+      whileHover={{ backgroundColor: "rgba(213,203,192,0.25)" }}
       transition={{ duration: 0.1 }}
       className="w-full rounded-[6px] px-2 py-1 text-left text-[13px] font-semibold text-ink-500 min-w-[60px]"
     >
-      {value || <span className="text-[#A08E7E] italic">{placeholder ?? "—"}</span>}
+      {value || <span className="text-[#A08E7E] italic font-normal">{placeholder ?? "—"}</span>}
     </motion.button>
   );
 }
 
-export function CreatorsTable({ creators }: Props) {
+/* ── Bool toggle inline ─────────────────────────────────────────── */
+function BoolCell({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <motion.button
+      type="button"
+      onClick={() => onChange(!value)}
+      whileHover={{ opacity: 0.8 }}
+      whileTap={{ scale: 0.95 }}
+      className="rounded-[6px] px-2 py-1 text-[12px] font-bold"
+      style={{
+        backgroundColor: value ? "rgba(22,163,74,0.1)" : "rgba(211,196,176,0.3)",
+        color: value ? "#15803D" : "#A08E7E",
+      }}
+    >
+      {value ? "SIM" : "NÃO"}
+    </motion.button>
+  );
+}
+
+/* ── Checkbox ───────────────────────────────────────────────────── */
+function Checkbox({ checked, onToggle }: { checked: boolean; onToggle: () => void }) {
+  return (
+    <motion.button
+      type="button"
+      onClick={onToggle}
+      whileTap={{ scale: 0.9 }}
+      initial={false}
+      animate={{
+        backgroundColor: checked ? "#23201F" : "transparent",
+        borderColor: checked ? "#23201F" : "#D3C4B0",
+      }}
+      transition={{ duration: 0.15 }}
+      className="flex h-4 w-4 items-center justify-center rounded-[4px] border-2"
+    >
+      {checked && (
+        <svg viewBox="0 0 10 8" width="10" height="8" fill="none">
+          <path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
+    </motion.button>
+  );
+}
+
+/* ── Tabela principal ───────────────────────────────────────────── */
+export function CreatorsTable({ creators }: { creators: Creator[] }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [, startTransition] = useTransition();
   const toast = useToast();
 
   const allSelected = creators.length > 0 && selected.size === creators.length;
 
-  function toggleAll() {
-    setSelected(allSelected ? new Set() : new Set(creators.map((c) => c.id)));
-  }
-
+  function toggleAll() { setSelected(allSelected ? new Set() : new Set(creators.map((c) => c.id))); }
   function toggleOne(id: string) {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+    setSelected((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   }
 
   function update(id: string, patch: Partial<Creator>) {
@@ -96,21 +178,16 @@ export function CreatorsTable({ creators }: Props) {
   }
 
   function deleteSelected() {
-    if (selected.size === 0) return;
     startTransition(async () => {
       const res = await deleteCreators([...selected]);
-      if (res.ok) {
-        toast.success(`${selected.size} creator(s) removido(s)`);
-        setSelected(new Set());
-      } else {
-        toast.error(res.error ?? "Erro ao remover");
-      }
+      if (res.ok) { toast.success(`${selected.size} creator(s) removido(s)`); setSelected(new Set()); }
+      else toast.error(res.error ?? "Erro ao remover");
     });
   }
 
   return (
     <div>
-      {/* Barra de seleção múltipla */}
+      {/* Barra de seleção */}
       <AnimatePresence>
         {selected.size > 0 && (
           <motion.div
@@ -118,11 +195,9 @@ export function CreatorsTable({ creators }: Props) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2, ease: [0, 0, 0.2, 1] }}
-            className="mb-3 flex items-center gap-3 rounded-[12px] bg-white px-4 py-2.5"
+            className="mb-3 flex items-center gap-3 rounded-[14px] bg-white px-4 py-2.5"
           >
-            <span className="text-[13px] font-semibold text-ink-500">
-              {selected.size} selecionado(s)
-            </span>
+            <span className="text-[13px] font-semibold text-ink-500">{selected.size} selecionado(s)</span>
             <motion.button
               type="button"
               onClick={deleteSelected}
@@ -131,8 +206,7 @@ export function CreatorsTable({ creators }: Props) {
               transition={{ duration: 0.15, ease: [0.34, 1.56, 0.64, 1] }}
               className="ml-auto flex items-center gap-1.5 rounded-[10px] bg-red-50 px-3 py-1.5 text-[13px] font-semibold text-red-600"
             >
-              <Trash2 size={13} />
-              Remover
+              <Trash2 size={13} /> Remover selecionados
             </motion.button>
           </motion.div>
         )}
@@ -143,23 +217,8 @@ export function CreatorsTable({ creators }: Props) {
           <table className="w-full border-collapse">
             <thead>
               <tr style={{ borderBottom: "1px solid rgba(35,32,31,0.06)" }}>
-                <th className="w-10 px-3 py-2.5">
-                  <motion.button
-                    type="button"
-                    onClick={toggleAll}
-                    className={`flex h-4 w-4 items-center justify-center rounded-[4px] border-2 transition-colors ${
-                      allSelected
-                        ? "border-primary-500 bg-primary-500"
-                        : "border-[#D3C4B0] bg-transparent"
-                    }`}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    {allSelected && (
-                      <svg viewBox="0 0 10 8" width="10" height="8" fill="none">
-                        <path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    )}
-                  </motion.button>
+                <th className="w-10 px-3 py-3">
+                  <Checkbox checked={allSelected} onToggle={toggleAll} />
                 </th>
                 <th className={TH}>Canal</th>
                 <th className={TH}>País</th>
@@ -169,7 +228,7 @@ export function CreatorsTable({ creators }: Props) {
                 <th className={TH}>Segmento</th>
                 <th className={TH}>Perfil / Link</th>
                 <th className={TH}>Contato</th>
-                <th className={TH}>Respondido</th>
+                <th className={TH}>Respondeu</th>
                 <th className={TH}>Status</th>
                 <th className={TH}>OBS</th>
               </tr>
@@ -177,61 +236,42 @@ export function CreatorsTable({ creators }: Props) {
             <tbody>
               {creators.length === 0 ? (
                 <tr>
-                  <td colSpan={12} className="py-16 text-center text-[14px] font-semibold text-[#A08E7E]">
-                    Nenhum registro. Comece adicionando uma prospecção acima.
+                  <td colSpan={12} className="py-20 text-center">
+                    <p className="text-[15px] font-bold text-[#A08E7E]">Nenhum registro encontrado</p>
+                    <p className="mt-1 text-[13px] font-semibold text-[#BBA998]">
+                      Ajuste os filtros ou adicione uma nova prospecção acima
+                    </p>
                   </td>
                 </tr>
               ) : (
                 creators.map((creator, i) => (
                   <motion.tr
                     key={creator.id}
-                    initial={{ opacity: 0, y: 8 }}
+                    initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.22, ease: [0, 0, 0.2, 1], delay: Math.min(i * 0.04, 0.28) }}
-                    className={`group transition-colors ${
-                      selected.has(creator.id) ? "bg-primary-50" : "hover:bg-[#FDFCFA]"
-                    }`}
-                    style={{ borderBottom: "1px solid rgba(35,32,31,0.04)" }}
+                    transition={{
+                      duration: 0.2,
+                      ease: [0, 0, 0.2, 1],
+                      delay: Math.min(i * 0.03, 0.24),
+                    }}
+                    className="group"
+                    style={{
+                      borderBottom: "1px solid rgba(35,32,31,0.04)",
+                      backgroundColor: selected.has(creator.id)
+                        ? "rgba(246,141,61,0.05)"
+                        : undefined,
+                    }}
                   >
-                    {/* Checkbox */}
                     <td className="w-10 px-3 py-2">
-                      <motion.button
-                        type="button"
-                        onClick={() => toggleOne(creator.id)}
-                        className={`flex h-4 w-4 items-center justify-center rounded-[4px] border-2 transition-colors ${
-                          selected.has(creator.id)
-                            ? "border-primary-500 bg-primary-500"
-                            : "border-[#D3C4B0] bg-transparent"
-                        }`}
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        {selected.has(creator.id) && (
-                          <svg viewBox="0 0 10 8" width="10" height="8" fill="none">
-                            <path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        )}
-                      </motion.button>
+                      <Checkbox checked={selected.has(creator.id)} onToggle={() => toggleOne(creator.id)} />
                     </td>
 
-                    {/* Canal */}
                     <td className={TD}>
-                      <InlineSelect
-                        value={creator.canal}
-                        options={CANAIS}
-                        onChange={(v) => update(creator.id, { canal: v as Canal })}
-                      />
+                      <InlineSelect value={creator.canal} options={CANAIS} onChange={(v) => update(creator.id, { canal: v as Canal })} />
                     </td>
-
-                    {/* País */}
                     <td className={TD}>
-                      <InlineSelect
-                        value={creator.pais}
-                        options={PAISES}
-                        onChange={(v) => update(creator.id, { pais: v as Pais })}
-                      />
+                      <InlineSelect value={creator.pais} options={PAISES} onChange={(v) => update(creator.id, { pais: v as Pais })} />
                     </td>
-
-                    {/* Analista */}
                     <td className={TD}>
                       <InlineSelect
                         value={creator.analista ?? "—"}
@@ -240,96 +280,64 @@ export function CreatorsTable({ creators }: Props) {
                       />
                     </td>
 
-                    {/* Nome */}
                     <td className={TD}>
-                      <EditableText
-                        value={creator.nome}
-                        placeholder="nome..."
-                        onSave={(v) => update(creator.id, { nome: v || null })}
-                      />
+                      <EditableText value={creator.nome} placeholder="nome..." onSave={(v) => update(creator.id, { nome: v || null })} />
                     </td>
 
-                    {/* Tier */}
                     <td className={TD}>
-                      <InlineSelect
-                        value={creator.tier}
-                        options={TIERS}
-                        onChange={(v) => update(creator.id, { tier: v as Tier })}
-                      />
+                      <InlineSelect value={creator.tier} options={TIERS} onChange={(v) => update(creator.id, { tier: v as Tier })} />
+                    </td>
+                    <td className={TD}>
+                      <InlineSelect value={creator.segmento} options={SEGMENTOS} onChange={(v) => update(creator.id, { segmento: v as Segmento })} />
                     </td>
 
-                    {/* Segmento */}
+                    {/* Perfil — handle à esquerda, ícone de link fixo à direita */}
                     <td className={TD}>
-                      <InlineSelect
-                        value={creator.segmento}
-                        options={SEGMENTOS}
-                        onChange={(v) => update(creator.id, { segmento: v as Segmento })}
-                      />
-                    </td>
-
-                    {/* Perfil */}
-                    <td className={TD}>
-                      <div className="flex items-center gap-1.5">
-                        <EditableText
-                          value={creator.perfil_handle}
-                          placeholder="@..."
-                          onSave={(v) => update(creator.id, { perfil_handle: v })}
-                        />
-                        {creator.perfil_handle && (
-                          <motion.a
-                            href={
-                              creator.perfil_handle.startsWith("http")
+                      <div className="flex min-w-[130px] items-center gap-1">
+                        <div className="flex-1 min-w-0">
+                          <EditableText
+                            value={creator.perfil_handle}
+                            placeholder="@..."
+                            onSave={(v) => update(creator.id, { perfil_handle: v })}
+                          />
+                        </div>
+                        <motion.a
+                          href={
+                            creator.perfil_handle
+                              ? creator.perfil_handle.startsWith("http")
                                 ? creator.perfil_handle
                                 : `https://instagram.com/${creator.perfil_handle.replace("@", "")}`
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            whileHover={{ scale: 1.2 }}
-                            whileTap={{ scale: 0.9 }}
-                            className="shrink-0 text-[#A08E7E] opacity-0 transition-opacity group-hover:opacity-100"
-                          >
-                            <ExternalLink size={12} />
-                          </motion.a>
-                        )}
+                              : "#"
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => { if (!creator.perfil_handle) e.preventDefault(); }}
+                          whileHover={{ scale: 1.2, color: "#F68D3D" }}
+                          whileTap={{ scale: 0.9 }}
+                          className="shrink-0 text-[#C9B9A8] opacity-0 transition-opacity group-hover:opacity-100"
+                        >
+                          <ExternalLink size={12} />
+                        </motion.a>
                       </div>
                     </td>
 
-                    {/* Contato */}
                     <td className={TD}>
-                      <InlineSelect
-                        value={creator.contato ? "SIM" : "NÃO"}
-                        options={["SIM", "NÃO"]}
-                        onChange={(v) => update(creator.id, { contato: v === "SIM" })}
-                      />
+                      <BoolCell value={creator.contato} onChange={(v) => update(creator.id, { contato: v })} />
+                    </td>
+                    <td className={TD}>
+                      <BoolCell value={creator.respondido} onChange={(v) => update(creator.id, { respondido: v })} />
                     </td>
 
-                    {/* Respondido */}
+                    {/* Status com badge colorida */}
                     <td className={TD}>
-                      <InlineSelect
-                        value={creator.respondido ? "SIM" : "NÃO"}
-                        options={["SIM", "NÃO"]}
-                        onChange={(v) => update(creator.id, { respondido: v === "SIM" })}
-                      />
-                    </td>
-
-                    {/* Status */}
-                    <td className={TD}>
-                      <InlineSelect
-                        value={creator.status}
-                        options={STATUS_LIST}
+                      <StatusDropdown
+                        status={creator.status}
                         onChange={(v) => update(creator.id, { status: v as Status })}
-                        colorMap={STATUS_COLORS}
-                        className={STATUS_COLORS[creator.status] + " rounded-[8px]"}
                       />
                     </td>
 
-                    {/* OBS */}
                     <td className={TD}>
-                      <EditableText
-                        value={creator.obs}
-                        placeholder="obs..."
-                        onSave={(v) => update(creator.id, { obs: v || null })}
-                      />
+                      <EditableText value={creator.obs} placeholder="obs..." onSave={(v) => update(creator.id, { obs: v || null })} />
                     </td>
                   </motion.tr>
                 ))
@@ -337,6 +345,16 @@ export function CreatorsTable({ creators }: Props) {
             </tbody>
           </table>
         </div>
+
+        {/* Rodapé com total */}
+        {creators.length > 0 && (
+          <div
+            className="px-4 py-3 text-[12px] font-semibold text-[#A08E7E]"
+            style={{ borderTop: "1px solid rgba(35,32,31,0.04)" }}
+          >
+            {creators.length} creator{creators.length !== 1 ? "s" : ""}
+          </div>
+        )}
       </div>
     </div>
   );

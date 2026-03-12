@@ -61,13 +61,26 @@ export const STATUS_LIST: Status[] = [
 ];
 export const ANALISTAS: Analista[] = ["Vitória", "Stefanie", "Bia", "Mauricio"];
 
+/* Cores semânticas por status — usadas em badges/pills na tabela */
+export const STATUS_STYLE: Record<Status, { bg: string; color: string; dot: string }> = {
+  "Prospectada":  { bg: "rgba(211,196,176,0.35)", color: "#A08E7E",  dot: "#A08E7E" },
+  "Contatada":    { bg: "rgba(59,130,246,0.10)",  color: "#2563EB",  dot: "#3B82F6" },
+  "Respondeu":    { bg: "rgba(245,158,11,0.12)",  color: "#B45309",  dot: "#D97706" },
+  "Interessa":    { bg: "rgba(246,141,61,0.14)",  color: "#D97A33",  dot: "#F68D3D" },
+  "Negociando":   { bg: "rgba(139,92,246,0.12)",  color: "#6D28D9",  dot: "#8B5CF6" },
+  "Ativou":       { bg: "rgba(22,163,74,0.12)",   color: "#15803D",  dot: "#16A34A" },
+  "Não quis":     { bg: "rgba(239,68,68,0.08)",   color: "#B91C1C",  dot: "#EF4444" },
+  "Já tem conta": { bg: "rgba(211,196,176,0.35)", color: "#A08E7E",  dot: "#A08E7E" },
+};
+
+/* Mantido por compatibilidade — prefer STATUS_STYLE */
 export const STATUS_COLORS: Record<Status, string> = {
-  "Prospectada":  "bg-base-300 text-ink-500",
-  "Contatada":    "bg-base-300 text-ink-500",
-  "Respondeu":    "bg-primary-100 text-primary-700",
-  "Interessa":    "bg-primary-200 text-primary-800",
-  "Negociando":   "bg-primary-300 text-primary-900",
-  "Ativou":       "bg-primary-500 text-white",
-  "Não quis":     "bg-ink-100 text-ink-400",
-  "Já tem conta": "bg-ink-100 text-ink-400",
+  "Prospectada":  "",
+  "Contatada":    "",
+  "Respondeu":    "",
+  "Interessa":    "",
+  "Negociando":   "",
+  "Ativou":       "",
+  "Não quis":     "",
+  "Já tem conta": "",
 };
