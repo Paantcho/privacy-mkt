@@ -32,7 +32,7 @@ const MONTHS = [
   "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro",
 ];
 
-/* ── Dropdown de filtro — carvão quando ativo ───────────────────── */
+/* ── Dropdown de filtro — sobre fundo laranja ───────────────────── */
 function FilterDropdown({
   label, options, value, onChange,
 }: {
@@ -44,7 +44,7 @@ function FilterDropdown({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const isActive = !!value;
-  const displayLabel = value ? options.find((o) => o.value === value)?.label ?? label : label;
+  const displayLabel = value ? (options.find((o) => o.value === value)?.label ?? label) : label;
 
   useEffect(() => {
     function onOut(e: MouseEvent) {
@@ -56,24 +56,25 @@ function FilterDropdown({
 
   return (
     <div ref={ref} className="relative shrink-0">
+      {/* Sobre laranja: branco sólido quando ativo, semi-transparente quando inativo */}
       <motion.button
         type="button"
         onClick={() => setOpen((v) => !v)}
         initial={false}
         animate={{
-          backgroundColor: isActive ? "#23201F" : "rgba(0,0,0,0)",
-          color: isActive ? "#FFFFFF" : "#A08E7E",
+          backgroundColor: isActive ? "#FFFFFF" : "rgba(35,32,31,0.12)",
+          color: "#23201F",
         }}
-        whileHover={!isActive ? { backgroundColor: "rgba(213,203,192,0.40)", color: "#23201F" } : undefined}
+        whileHover={!isActive ? { backgroundColor: "rgba(255,255,255,0.30)" } : undefined}
         whileTap={{ scale: 0.97 }}
         transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
-        className="flex items-center gap-1.5 rounded-[20px] px-3.5 py-2 text-[13px] font-bold whitespace-nowrap"
+        className="flex items-center gap-1.5 rounded-[20px] px-4 py-2 text-[13px] font-bold whitespace-nowrap"
       >
         {displayLabel}
         <motion.span
           animate={{ rotate: open ? 180 : 0 }}
           transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
-          className="opacity-60"
+          style={{ opacity: isActive ? 0.5 : 0.6 }}
         >
           <ChevronDown size={12} />
         </motion.span>
@@ -86,21 +87,24 @@ function FilterDropdown({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.97 }}
             transition={{ duration: 0.14, ease: [0, 0, 0.2, 1] }}
-            className="absolute left-0 top-full z-50 mt-1 min-w-[160px] overflow-hidden rounded-[14px] bg-white py-1.5"
+            className="absolute left-0 top-full z-50 mt-2 min-w-[170px] overflow-hidden rounded-[14px] bg-white py-1.5"
             style={{ border: "1px solid rgba(35,32,31,0.08)" }}
           >
+            {/* "Todos" sempre visível */}
             <motion.button
               type="button"
               onClick={() => { onChange(""); setOpen(false); }}
               whileHover={{ backgroundColor: "#F4EEE5" }}
               transition={{ duration: 0.1 }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-semibold text-[#A08E7E]"
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-semibold"
+              style={{ color: !value ? "#F68D3D" : "#A08E7E" }}
             >
               <span className="w-4 shrink-0">
-                {!value && <Check size={12} className="text-primary-500" />}
+                {!value && <Check size={12} />}
               </span>
               Todos
             </motion.button>
+            <div className="mx-3 mb-1 h-px" style={{ background: "rgba(35,32,31,0.06)" }} />
             {options.map((opt) => (
               <motion.button
                 key={opt.value}
@@ -110,8 +114,8 @@ function FilterDropdown({
                 transition={{ duration: 0.1 }}
                 className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-semibold text-ink-500"
               >
-                <span className="w-4 shrink-0">
-                  {opt.value === value && <Check size={12} className="text-primary-500" />}
+                <span className="w-4 shrink-0" style={{ color: "#F68D3D" }}>
+                  {opt.value === value && <Check size={12} />}
                 </span>
                 {opt.label}
               </motion.button>
@@ -180,8 +184,8 @@ export function TimelineClient({ creators }: Props) {
         </p>
       </div>
 
-      {/* ── Barra de filtros — dropdowns em linha horizontal ────────── */}
-      <div className="mb-4 rounded-[20px] bg-white px-4 py-3">
+      {/* ── Barra de filtros — fundo laranja, dropdowns em linha ───── */}
+      <div className="mb-4 rounded-[20px] px-4 py-3" style={{ background: "#F68D3D" }}>
         <div
           className="flex items-center gap-2 overflow-x-auto"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
@@ -193,7 +197,7 @@ export function TimelineClient({ creators }: Props) {
             options={anosDisponiveis.map((a) => ({ label: a, value: a }))}
           />
 
-          <div className="h-4 w-px shrink-0" style={{ background: "rgba(35,32,31,0.10)" }} />
+          <div className="h-4 w-px shrink-0" style={{ background: "rgba(35,32,31,0.18)" }} />
 
           <FilterDropdown
             label="Mês"
@@ -202,7 +206,7 @@ export function TimelineClient({ creators }: Props) {
             options={MONTHS.map((m, idx) => ({ label: m, value: String(idx) }))}
           />
 
-          <div className="h-4 w-px shrink-0" style={{ background: "rgba(35,32,31,0.10)" }} />
+          <div className="h-4 w-px shrink-0" style={{ background: "rgba(35,32,31,0.18)" }} />
 
           <FilterDropdown
             label="Canal"
@@ -211,7 +215,7 @@ export function TimelineClient({ creators }: Props) {
             options={CANAIS.map((c) => ({ label: c, value: c }))}
           />
 
-          <div className="h-4 w-px shrink-0" style={{ background: "rgba(35,32,31,0.10)" }} />
+          <div className="h-4 w-px shrink-0" style={{ background: "rgba(35,32,31,0.18)" }} />
 
           <FilterDropdown
             label="Analista"
@@ -220,7 +224,7 @@ export function TimelineClient({ creators }: Props) {
             options={ANALISTAS.map((a) => ({ label: a, value: a }))}
           />
 
-          <div className="h-4 w-px shrink-0" style={{ background: "rgba(35,32,31,0.10)" }} />
+          <div className="h-4 w-px shrink-0" style={{ background: "rgba(35,32,31,0.18)" }} />
 
           <FilterDropdown
             label="Status"
@@ -229,7 +233,7 @@ export function TimelineClient({ creators }: Props) {
             options={STATUS_LIST.map((s) => ({ label: s, value: s }))}
           />
 
-          {/* Limpar filtros */}
+          {/* Limpar filtros — visível no fundo laranja */}
           <AnimatePresence>
             {hasFilters && (
               <motion.button
@@ -238,9 +242,11 @@ export function TimelineClient({ creators }: Props) {
                 exit={{ opacity: 0, scale: 0.85 }}
                 type="button"
                 onClick={clearAll}
-                whileHover={{ color: "#23201F" }}
+                whileHover={{ backgroundColor: "rgba(35,32,31,0.12)" }}
+                whileTap={{ scale: 0.96 }}
                 transition={{ duration: 0.15 }}
-                className="ml-auto flex shrink-0 items-center gap-1 text-[12px] font-bold text-[#A08E7E] underline underline-offset-2"
+                className="ml-auto flex shrink-0 items-center gap-1 rounded-[20px] px-3 py-2 text-[12px] font-bold"
+                style={{ color: "#23201F" }}
               >
                 <X size={11} />
                 Limpar
@@ -249,7 +255,7 @@ export function TimelineClient({ creators }: Props) {
           </AnimatePresence>
         </div>
 
-        {/* Contador quando filtrado */}
+        {/* Contador quando filtrado — sobre fundo laranja */}
         <AnimatePresence>
           {hasFilters && (
             <motion.p
@@ -257,10 +263,14 @@ export function TimelineClient({ creators }: Props) {
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.18 }}
-              className="mt-2 pt-2 text-[12px] font-semibold text-[#A08E7E]"
-              style={{ borderTop: "1px solid rgba(35,32,31,0.05)" }}
+              className="mt-2 pt-2 text-[12px] font-semibold"
+              style={{
+                borderTop: "1px solid rgba(35,32,31,0.15)",
+                color: "rgba(35,32,31,0.65)",
+              }}
             >
-              <span className="font-bold text-ink-500">{filtered.length}</span> de {creators.length} registros
+              <span className="font-bold" style={{ color: "#23201F" }}>{filtered.length}</span>
+              {" "}de {creators.length} registros
             </motion.p>
           )}
         </AnimatePresence>
