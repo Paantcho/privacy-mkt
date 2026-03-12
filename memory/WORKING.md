@@ -6,7 +6,7 @@ Atualizado a cada sessão de trabalho.
 
 ## Status Geral
 
-Hub configurado e pronto para receber projetos.
+Primeiro projeto criado e em desenvolvimento ativo.
 
 ---
 
@@ -14,27 +14,37 @@ Hub configurado e pronto para receber projetos.
 
 **Data:** 12/03/2026
 **O que foi feito:**
-- Estrutura do hub criada
-- Design system configurado com tokens Privacy (#F68D3D, #23201F, #F4EEE5)
-- Componentes adaptados: Button, Modal, Portal, Select, Toast, SlidingTabs, TabContent
-- Regras `.cursor/rules/` criadas (design, motion, architecture)
-- Memória inicializada
+- Projeto `creator-hunting` inicializado em `projetos/creator-hunting/`
+- Stack: Next.js 16 · TypeScript · Tailwind 4 · Framer Motion · Supabase
+- Design system Privacy aplicado (tokens, Urbanist, #F68D3D, #F4EEE5)
+- Sidebar com pill spring laranja adaptada do Hubia
+- AppShell + PageTransition com blur
+- 4 páginas: Planilha · Dashboard · Metas & Pace · Timeline
+- Schema Supabase em `supabase/schema.sql`
+- Server Actions: createCreator, updateCreator, deleteCreators, getCreators
+- Build de produção funcionando sem erros
 
 ---
 
 ## Projetos Ativos
 
-_Nenhum projeto iniciado ainda._
+### creator-hunting
+- **Caminho:** `projetos/creator-hunting/`
+- **URL dev:** http://localhost:3000
+- **Supabase:** precisar criar projeto no dashboard.supabase.com e preencher `.env.local`
+- **Status:** MVP completo — aguardando conexão com Supabase para testar com dados reais
 
 ---
 
 ## Próxima Ação
 
-Aguardando pedido de novo projeto.
+1. Criar projeto Supabase em https://supabase.com/dashboard
+2. Copiar URL e chave anon key para `projetos/creator-hunting/.env.local`
+3. Rodar o SQL em `projetos/creator-hunting/supabase/schema.sql` no SQL Editor do Supabase
+4. Acessar http://localhost:3000 e testar
 
-Quando o usuário pedir, o orquestrador deve:
-1. Ler `memory/MEMORY.md`
-2. Criar `projetos/<nome>/`
-3. Inicializar estrutura Next.js
-4. Referenciar design-system
-5. Atualizar este arquivo
+Melhorias futuras:
+- Histórico de mudança de status (log de auditoria por creator)
+- Metas salvas no banco por analista
+- Import CSV para migrar dados do Excel legado
+- Deploy na Vercel
