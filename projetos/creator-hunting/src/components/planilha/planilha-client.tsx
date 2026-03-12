@@ -165,27 +165,24 @@ export function PlanilhaClient({ creators }: Props) {
 
         {/* Pills de analista */}
         <div className="flex items-center gap-1 rounded-[20px] bg-white px-2 py-1">
-          <motion.button
-            type="button"
-            onClick={() => setAnalista("")}
-            whileHover={analista !== "" ? { backgroundColor: "rgba(213,203,192,0.4)" } : undefined}
-            whileTap={{ scale: 0.97 }}
-            className={PILL_BTN + (analista === "" ? " bg-primary-500 text-white" : " text-[#A08E7E]")}
-          >
-            Todos ({creators.length})
-          </motion.button>
-          {ANALISTAS.map((a) => {
-            const count = creators.filter((c) => c.analista === a).length;
+          {[{ label: `Todos (${creators.length})`, value: "" }, ...ANALISTAS.map((a) => ({
+            label: `${a} (${creators.filter((c) => c.analista === a).length})`,
+            value: a,
+          }))].map(({ label, value: v }) => {
+            const isActive = analista === v;
             return (
               <motion.button
-                key={a}
+                key={v || "todos"}
                 type="button"
-                onClick={() => setAnalista(analista === a ? "" : a)}
-                whileHover={analista !== a ? { backgroundColor: "rgba(213,203,192,0.4)" } : undefined}
+                onClick={() => setAnalista(isActive && v !== "" ? "" : v)}
+                initial={false}
+                animate={{ backgroundColor: isActive ? "#F68D3D" : "rgba(0,0,0,0)", color: isActive ? "#FFFFFF" : "#A08E7E" }}
+                whileHover={!isActive ? { backgroundColor: "rgba(213,203,192,0.4)", color: "#23201F" } : undefined}
                 whileTap={{ scale: 0.97 }}
-                className={PILL_BTN + (analista === a ? " bg-primary-500 text-white" : " text-[#A08E7E]")}
+                transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+                className={PILL_BTN}
               >
-                {a} ({count})
+                {label}
               </motion.button>
             );
           })}
@@ -230,18 +227,24 @@ export function PlanilhaClient({ creators }: Props) {
           Período:
         </span>
         <div className="flex items-center gap-1 rounded-[20px] bg-white px-2 py-1">
-          {PERIODS.map(({ label, value }) => (
-            <motion.button
-              key={value}
-              type="button"
-              onClick={() => setPeriod(value)}
-              whileHover={period !== value ? { backgroundColor: "rgba(213,203,192,0.4)" } : undefined}
-              whileTap={{ scale: 0.97 }}
-              className={PILL_BTN + (period === value ? " bg-primary-500 text-white" : " text-[#A08E7E]")}
-            >
-              {label}
-            </motion.button>
-          ))}
+          {PERIODS.map(({ label, value }) => {
+            const isActive = period === value;
+            return (
+              <motion.button
+                key={value}
+                type="button"
+                onClick={() => setPeriod(value)}
+                initial={false}
+                animate={{ backgroundColor: isActive ? "#F68D3D" : "rgba(0,0,0,0)", color: isActive ? "#FFFFFF" : "#A08E7E" }}
+                whileHover={!isActive ? { backgroundColor: "rgba(213,203,192,0.4)", color: "#23201F" } : undefined}
+                whileTap={{ scale: 0.97 }}
+                transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+                className={PILL_BTN}
+              >
+                {label}
+              </motion.button>
+            );
+          })}
         </div>
 
         <span className="ml-auto text-[12px] font-semibold text-[#A08E7E]">

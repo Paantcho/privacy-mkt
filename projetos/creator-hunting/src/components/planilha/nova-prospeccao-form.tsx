@@ -9,12 +9,12 @@ import {
 } from "@/types/creator";
 import { createCreator } from "@/lib/actions/creators";
 import { useToast } from "@/components/ui/toast";
+import { FormSelect } from "@/components/ui/form-select";
 
 const FIELD_STYLE =
   "h-10 w-full rounded-[10px] border border-transparent bg-[#F4EEE5] px-3 text-[14px] font-semibold text-ink-500 placeholder:text-[#A08E7E] outline-none focus:border-[#F68D3D] focus:bg-white transition-colors duration-150";
 
-const SELECT_STYLE =
-  "h-10 w-full rounded-[10px] border border-transparent bg-[#F4EEE5] px-3 text-[14px] font-semibold text-ink-500 outline-none focus:border-[#F68D3D] focus:bg-white transition-colors duration-150 appearance-none cursor-pointer";
+const LABEL_STYLE = "text-[11px] font-bold uppercase tracking-[0.4px] text-[#A08E7E]";
 
 interface FormState {
   canal: Canal;
@@ -43,6 +43,39 @@ const INITIAL: FormState = {
   status: "Contatada",
   obs: "",
 };
+
+function BoolToggle({
+  value,
+  onChange,
+}: {
+  value: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <div className="flex h-10 items-center gap-1 rounded-[10px] bg-[#F4EEE5] p-1">
+      {["SIM", "NÃO"].map((opt) => {
+        const isActive = opt === "SIM" ? value : !value;
+        return (
+          <motion.button
+            key={opt}
+            type="button"
+            onClick={() => onChange(opt === "SIM")}
+            initial={false}
+            animate={{
+              backgroundColor: isActive ? "#F68D3D" : "rgba(0,0,0,0)",
+              color: isActive ? "#FFFFFF" : "#A08E7E",
+            }}
+            whileHover={!isActive ? { backgroundColor: "rgba(213,203,192,0.4)", color: "#23201F" } : undefined}
+            transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+            className="flex-1 rounded-[7px] text-[13px] font-bold py-1"
+          >
+            {opt}
+          </motion.button>
+        );
+      })}
+    </div>
+  );
+}
 
 export function NovaProspeccaoForm() {
   const [open, setOpen] = useState(true);
@@ -109,57 +142,40 @@ export function NovaProspeccaoForm() {
             style={{ overflow: "hidden" }}
           >
             <form onSubmit={handleSubmit} className="px-6 pb-6">
-              <div
-                className="mb-4 h-px"
-                style={{ background: "rgba(35,32,31,0.06)" }}
-              />
+              <div className="mb-4 h-px" style={{ background: "rgba(35,32,31,0.06)" }} />
 
               {/* Linha 1 */}
               <div className="mb-3 grid grid-cols-6 gap-3">
                 <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-bold uppercase tracking-[0.4px] text-[#A08E7E]">
-                    Canal
-                  </label>
-                  <select
-                    className={SELECT_STYLE}
+                  <label className={LABEL_STYLE}>Canal</label>
+                  <FormSelect
                     value={form.canal}
-                    onChange={(e) => set("canal", e.target.value as Canal)}
-                  >
-                    {CANAIS.map((c) => <option key={c}>{c}</option>)}
-                  </select>
+                    options={CANAIS}
+                    onChange={(v) => set("canal", v as Canal)}
+                  />
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-bold uppercase tracking-[0.4px] text-[#A08E7E]">
-                    País
-                  </label>
-                  <select
-                    className={SELECT_STYLE}
+                  <label className={LABEL_STYLE}>País</label>
+                  <FormSelect
                     value={form.pais}
-                    onChange={(e) => set("pais", e.target.value as Pais)}
-                  >
-                    {PAISES.map((p) => <option key={p}>{p}</option>)}
-                  </select>
+                    options={PAISES}
+                    onChange={(v) => set("pais", v as Pais)}
+                  />
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-bold uppercase tracking-[0.4px] text-[#A08E7E]">
-                    Analista *
-                  </label>
-                  <select
-                    className={SELECT_STYLE}
+                  <label className={LABEL_STYLE}>Analista *</label>
+                  <FormSelect
                     value={form.analista}
-                    onChange={(e) => set("analista", e.target.value as Analista | "")}
-                  >
-                    <option value="">Quem?</option>
-                    {ANALISTAS.map((a) => <option key={a}>{a}</option>)}
-                  </select>
+                    options={[{ label: "Quem?", value: "" }, ...ANALISTAS.map((a) => ({ label: a, value: a }))]}
+                    onChange={(v) => set("analista", v as Analista | "")}
+                    placeholder="Quem?"
+                  />
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-bold uppercase tracking-[0.4px] text-[#A08E7E]">
-                    Nome
-                  </label>
+                  <label className={LABEL_STYLE}>Nome</label>
                   <input
                     className={FIELD_STYLE}
                     placeholder="Nome da creator"
@@ -169,51 +185,37 @@ export function NovaProspeccaoForm() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-bold uppercase tracking-[0.4px] text-[#A08E7E]">
-                    Tier
-                  </label>
-                  <select
-                    className={SELECT_STYLE}
+                  <label className={LABEL_STYLE}>Tier</label>
+                  <FormSelect
                     value={form.tier}
-                    onChange={(e) => set("tier", e.target.value as Tier)}
-                  >
-                    {TIERS.map((t) => <option key={t}>{t}</option>)}
-                  </select>
+                    options={TIERS}
+                    onChange={(v) => set("tier", v as Tier)}
+                  />
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-bold uppercase tracking-[0.4px] text-[#A08E7E]">
-                    Status
-                  </label>
-                  <select
-                    className={SELECT_STYLE}
+                  <label className={LABEL_STYLE}>Status</label>
+                  <FormSelect
                     value={form.status}
-                    onChange={(e) => set("status", e.target.value as Status)}
-                  >
-                    {STATUS_LIST.map((s) => <option key={s}>{s}</option>)}
-                  </select>
+                    options={STATUS_LIST}
+                    onChange={(v) => set("status", v as Status)}
+                  />
                 </div>
               </div>
 
               {/* Linha 2 */}
               <div className="mb-4 grid grid-cols-6 gap-3">
                 <div className="col-span-1 flex flex-col gap-1">
-                  <label className="text-[11px] font-bold uppercase tracking-[0.4px] text-[#A08E7E]">
-                    Segmento/Nicho
-                  </label>
-                  <select
-                    className={SELECT_STYLE}
+                  <label className={LABEL_STYLE}>Segmento/Nicho</label>
+                  <FormSelect
                     value={form.segmento}
-                    onChange={(e) => set("segmento", e.target.value as Segmento)}
-                  >
-                    {SEGMENTOS.map((s) => <option key={s}>{s}</option>)}
-                  </select>
+                    options={SEGMENTOS}
+                    onChange={(v) => set("segmento", v as Segmento)}
+                  />
                 </div>
 
                 <div className="col-span-2 flex flex-col gap-1">
-                  <label className="text-[11px] font-bold uppercase tracking-[0.4px] text-[#A08E7E]">
-                    Perfil / @*
-                  </label>
+                  <label className={LABEL_STYLE}>Perfil / @*</label>
                   <input
                     className={FIELD_STYLE}
                     placeholder="@perfil ou cole o link"
@@ -224,31 +226,13 @@ export function NovaProspeccaoForm() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-bold uppercase tracking-[0.4px] text-[#A08E7E]">
-                    Contato
-                  </label>
-                  <select
-                    className={SELECT_STYLE}
-                    value={form.contato ? "SIM" : "NÃO"}
-                    onChange={(e) => set("contato", e.target.value === "SIM")}
-                  >
-                    <option>SIM</option>
-                    <option>NÃO</option>
-                  </select>
+                  <label className={LABEL_STYLE}>Contato</label>
+                  <BoolToggle value={form.contato} onChange={(v) => set("contato", v)} />
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-bold uppercase tracking-[0.4px] text-[#A08E7E]">
-                    Respondido
-                  </label>
-                  <select
-                    className={SELECT_STYLE}
-                    value={form.respondido ? "SIM" : "NÃO"}
-                    onChange={(e) => set("respondido", e.target.value === "SIM")}
-                  >
-                    <option>NÃO</option>
-                    <option>SIM</option>
-                  </select>
+                  <label className={LABEL_STYLE}>Respondido</label>
+                  <BoolToggle value={form.respondido} onChange={(v) => set("respondido", v)} />
                 </div>
 
                 <div className="flex items-end">
@@ -273,9 +257,7 @@ export function NovaProspeccaoForm() {
 
               {/* OBS */}
               <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-bold uppercase tracking-[0.4px] text-[#A08E7E]">
-                  OBS
-                </label>
+                <label className={LABEL_STYLE}>OBS</label>
                 <input
                   className={FIELD_STYLE}
                   placeholder="contexto rápido..."

@@ -5,6 +5,34 @@ import { motion } from "framer-motion";
 import { Users, Flame, CheckCircle2, XCircle } from "lucide-react";
 import { STATUS_LIST, ANALISTAS, type Creator, type Status } from "@/types/creator";
 
+function WelcomeHeader() {
+  const now = new Date();
+  const hour = now.getHours();
+  const greeting = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
+  const dateStr = now.toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: [0, 0, 0.2, 1] }}
+      className="mb-6"
+    >
+      <h1 className="text-[28px] font-bold text-ink-500">
+        {greeting}, Privacy
+      </h1>
+      <p className="mt-0.5 text-[14px] font-semibold text-[#A08E7E] capitalize">
+        {dateStr}
+      </p>
+    </motion.div>
+  );
+}
+
 interface Props {
   creators: Creator[];
 }
@@ -117,12 +145,7 @@ export function DashboardClient({ creators }: Props) {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-ink-500">Dashboard</h1>
-        <p className="mt-0.5 text-[14px] font-semibold text-[#A08E7E]">
-          Visão geral da prospecção
-        </p>
-      </div>
+      <WelcomeHeader />
 
       {/* Cards de métricas */}
       <div className="mb-6 grid grid-cols-4 gap-4">

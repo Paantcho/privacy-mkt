@@ -9,9 +9,9 @@ export default async function PlanilhaPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-[28px] font-bold text-ink-500">Creator Hunting</h1>
+        <h1 className="text-[28px] font-bold text-ink-500">Prospecção</h1>
         <p className="mt-0.5 text-[14px] font-semibold text-[#A08E7E]">
-          Prospecção comercial
+          Gestão de creators prospectados
         </p>
       </div>
 

@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
-  Table2,
   BarChart3,
+  Search,
   Target,
   Clock,
 } from "lucide-react";
@@ -20,10 +20,10 @@ interface MenuItem {
 }
 
 const MENU_ITEMS: MenuItem[] = [
-  { label: "Planilha",     href: "/planilha",   icon: Table2,   iconClass: "icon-pulse" },
   { label: "Dashboard",    href: "/dashboard",  icon: BarChart3, iconClass: "icon-grow" },
-  { label: "Metas & Pace", href: "/metas",      icon: Target,   iconClass: "icon-spark" },
-  { label: "Timeline",     href: "/timeline",   icon: Clock,    iconClass: "icon-wiggle" },
+  { label: "Prospecção",   href: "/planilha",   icon: Search,    iconClass: "icon-pulse" },
+  { label: "Metas & Pace", href: "/metas",      icon: Target,    iconClass: "icon-spark" },
+  { label: "Histórico",    href: "/timeline",   icon: Clock,     iconClass: "icon-wiggle" },
 ];
 
 export function Sidebar() {
@@ -34,7 +34,8 @@ export function Sidebar() {
   const [pillHeight, setPillHeight] = useState(44);
 
   function isActive(href: string) {
-    if (href === "/planilha") return pathname === "/planilha" || pathname === "/";
+    if (href === "/dashboard") return pathname === "/dashboard" || pathname === "/";
+    if (href === "/planilha") return pathname === "/planilha";
     return pathname.startsWith(href);
   }
 
