@@ -132,14 +132,9 @@ function AnalistaCard({
     setEditOpen(false);
   }
 
-  /* Pace — sobre fundo laranja: verde/branco-forte/branco-fraco */
   const paceGood = stats.vaiAcertar;
   const paceMid  = !paceGood && stats.pctMes >= 50;
   const PaceIcon = paceGood ? TrendingUp : paceMid ? Minus : TrendingDown;
-  /* branco total no bom, branco 80% no médio, branco 50% no ruim */
-  const paceTextColor = paceGood ? "#FFFFFF" : paceMid ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.50)";
-  /* barra de progresso: branco opaco no bom, branco 70% médio, branco 40% ruim */
-  const barFill = paceGood ? "rgba(255,255,255,1)" : paceMid ? "rgba(255,255,255,0.70)" : "rgba(255,255,255,0.35)";
 
   return (
     <motion.div
@@ -149,66 +144,85 @@ function AnalistaCard({
       className="overflow-hidden rounded-[24px] bg-white"
     >
       {/* ── Header laranja ────────────────────────────────────────── */}
+      {/*
+        Regra de contraste sobre laranja saturado:
+        - Texto primário   → #23201F carvão puro (contraste ~5:1)
+        - Texto secundário → #FFFFFF branco puro (contraste ~3.5:1) — não carvão diluído
+        - Nunca rgba(35,32,31,0.x) sobre laranja — vira marrom ilegível
+      */}
       <div className="px-6 pt-6 pb-5" style={{ background: "#F68D3D" }}>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            {/* Avatar: branco semi-transparente com inicial carvão — contraste sobre laranja */}
-            <div
-              className="flex h-12 w-12 items-center justify-center rounded-[14px] text-[20px] font-bold"
-              style={{ backgroundColor: "rgba(255,255,255,0.25)", color: "#23201F" }}
-            >
-              {analista.charAt(0)}
-            </div>
-            <div>
-              {/* Nome: carvão — máximo contraste sobre laranja */}
-              <p className="text-[22px] font-bold leading-tight" style={{ color: "#23201F" }}>{analista}</p>
-              {/* Foco: carvão 60% — hierarquia secundária */}
-              <p className="mt-0.5 text-[12px] font-semibold" style={{ color: "rgba(35,32,31,0.60)" }}>
-                {meta.focoTier || "Foco não definido"}
-              </p>
-            </div>
+
+        {/* Linha 1 — Avatar + Nome + Badge */}
+        <div className="flex items-center gap-3">
+          {/* Avatar: carvão sólido para máximo contraste */}
+          <div
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] text-[18px] font-bold text-white"
+            style={{ backgroundColor: "#23201F" }}
+          >
+            {analista.charAt(0)}
           </div>
 
-          {/* Badge tipo + Pace */}
-          <div className="flex flex-col items-end gap-2">
-            {/* Badge: carvão sobre branco semi-transparente */}
-            <div
-              className="rounded-[8px] px-2.5 py-1 text-[11px] font-bold"
-              style={{ background: "rgba(35,32,31,0.15)", color: "#23201F" }}
-            >
-              {meta.tipo}
-            </div>
-            {/* Pace: hierarquia de branco conforme desempenho */}
-            <div className="flex items-center gap-1">
-              <PaceIcon size={12} style={{ color: paceTextColor }} />
-              <span className="text-[12px] font-bold" style={{ color: paceTextColor }}>
-                {Math.round(stats.pctMes)}% do mês
-              </span>
-            </div>
+          <div className="flex-1 min-w-0">
+            {/* Nome: carvão puro — nível 1 de hierarquia */}
+            <p className="text-[24px] font-bold leading-tight" style={{ color: "#23201F" }}>
+              {analista}
+            </p>
+            {/* Foco: branco puro — nível 2, não carvão diluído */}
+            <p className="mt-0.5 text-[12px] font-semibold text-white">
+              {meta.focoTier || "Foco não definido"}
+            </p>
+          </div>
+
+          {/* Badge: branco sólido com carvão — destaca sobre o laranja */}
+          <div
+            className="shrink-0 rounded-[8px] bg-white px-3 py-1.5 text-[12px] font-bold"
+            style={{ color: "#23201F" }}
+          >
+            {meta.tipo}
           </div>
         </div>
 
-        {/* Progress bar dentro do header */}
-        <div className="mt-4">
-          <div className="mb-2 flex items-center justify-between">
-            {/* Label: carvão 50% */}
-            <span className="text-[10px] font-bold uppercase tracking-[0.5px]" style={{ color: "rgba(35,32,31,0.50)" }}>
+        {/* Linha 2 — Pace */}
+        <div className="mt-3 flex items-center gap-1.5">
+          <PaceIcon
+            size={13}
+            style={{ color: paceGood ? "#23201F" : "rgba(35,32,31,0.5)" }}
+          />
+          <span
+            className="text-[13px] font-bold"
+            style={{ color: paceGood ? "#23201F" : "rgba(35,32,31,0.55)" }}
+          >
+            {paceGood ? "No ritmo" : paceMid ? "Pace médio" : "Pace abaixo"} —{" "}
+          </span>
+          <span className="text-[13px] font-semibold" style={{ color: "#23201F" }}>
+            {Math.round(stats.pctMes)}% da meta do mês
+          </span>
+        </div>
+
+        {/* Linha 3 — Barra de progresso */}
+        <div className="mt-3">
+          <div className="mb-1.5 flex items-center justify-between">
+            {/* Label: branco puro, maiúsculo */}
+            <span className="text-[10px] font-bold uppercase tracking-[0.6px] text-white opacity-75">
               Prospecções este mês
             </span>
-            {/* Número: carvão forte / carvão 50% para o total */}
+            {/* Números: carvão para o atual (destaque), branco 75% para o limite */}
             <span className="text-[13px] font-bold" style={{ color: "#23201F" }}>
-              {stats.mes}{" "}
-              <span style={{ color: "rgba(35,32,31,0.45)" }}>/ {meta.contatosSemana * 4}</span>
+              {stats.mes}
+              <span className="font-semibold text-white opacity-70"> / {meta.contatosSemana * 4}</span>
             </span>
           </div>
-          {/* Track: carvão 15%; fill: branco com opacidade por desempenho */}
-          <div className="relative h-1.5 w-full overflow-hidden rounded-pill" style={{ background: "rgba(35,32,31,0.15)" }}>
+          {/* Track branco 25%; fill carvão — máximo contraste */}
+          <div
+            className="relative h-2 w-full overflow-hidden rounded-pill"
+            style={{ background: "rgba(255,255,255,0.25)" }}
+          >
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${Math.min(stats.pctMes, 100)}%` }}
               transition={{ duration: 0.85, ease: [0, 0, 0.2, 1], delay: delay + 0.2 }}
               className="h-full rounded-pill"
-              style={{ backgroundColor: barFill }}
+              style={{ backgroundColor: "#23201F" }}
             />
           </div>
         </div>
