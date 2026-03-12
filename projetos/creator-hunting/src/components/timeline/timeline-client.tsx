@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, ArrowRight, X, ChevronDown, Check } from "lucide-react";
+import { Clock, ChevronDown, Check, X } from "lucide-react";
 import { ANALISTAS, CANAIS, STATUS_LIST, STATUS_STYLE, type Creator } from "@/types/creator";
 
 interface Props { creators: Creator[] }
@@ -13,26 +13,24 @@ function timeAgo(dateStr: string): string {
   const m = Math.floor(diffMs / 60000);
   const h = Math.floor(m / 60);
   const d = Math.floor(h / 24);
-  if (m < 1)  return "agora mesmo";
-  if (m < 60) return `há ${m} min`;
-  if (h < 24) return `há ${h}h`;
+  if (m < 1)   return "agora mesmo";
+  if (m < 60)  return `há ${m}min`;
+  if (h < 24)  return `há ${h}h`;
   if (d === 1) return "ontem";
-  if (d < 7)  return `há ${d} dias`;
+  if (d < 7)   return `há ${d} dias`;
   return new Date(dateStr).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 }
 
-function formatDateLabel(dateStr: string): string {
+function formatDayLabel(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("pt-BR", {
     weekday: "long", day: "2-digit", month: "long", year: "numeric",
   });
 }
 
-const MONTHS = [
-  "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
-  "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro",
-];
+const MONTHS = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+                "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
-/* ── Dropdown de filtro — sobre fundo laranja ───────────────────── */
+/* ── Dropdown — sobre fundo laranja claro ────────────────────────── */
 function FilterDropdown({
   label, options, value, onChange,
 }: {
@@ -44,7 +42,9 @@ function FilterDropdown({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const isActive = !!value;
-  const displayLabel = value ? (options.find((o) => o.value === value)?.label ?? label) : label;
+  const displayLabel = isActive
+    ? (options.find((o) => o.value === value)?.label ?? label)
+    : label;
 
   useEffect(() => {
     function onOut(e: MouseEvent) {
@@ -56,16 +56,20 @@ function FilterDropdown({
 
   return (
     <div ref={ref} className="relative shrink-0">
-      {/* Sobre laranja: branco sólido quando ativo, semi-transparente quando inativo */}
+      {/*
+        Barra é laranja claro (#FDF0E5-ish).
+        Inativo  → laranja médio translúcido
+        Ativo    → laranja sólido #F68D3D + texto branco
+      */}
       <motion.button
         type="button"
         onClick={() => setOpen((v) => !v)}
         initial={false}
         animate={{
-          backgroundColor: isActive ? "#FFFFFF" : "rgba(35,32,31,0.12)",
-          color: "#23201F",
+          backgroundColor: isActive ? "#F68D3D" : "rgba(246,141,61,0.18)",
+          color: isActive ? "#FFFFFF" : "#C96B1A",
         }}
-        whileHover={!isActive ? { backgroundColor: "rgba(255,255,255,0.30)" } : undefined}
+        whileHover={!isActive ? { backgroundColor: "rgba(246,141,61,0.30)" } : { opacity: 0.9 }}
         whileTap={{ scale: 0.97 }}
         transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
         className="flex items-center gap-1.5 rounded-[20px] px-4 py-2 text-[13px] font-bold whitespace-nowrap"
@@ -73,8 +77,8 @@ function FilterDropdown({
         {displayLabel}
         <motion.span
           animate={{ rotate: open ? 180 : 0 }}
-          transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
-          style={{ opacity: isActive ? 0.5 : 0.6 }}
+          transition={{ duration: 0.18 }}
+          className="opacity-70"
         >
           <ChevronDown size={12} />
         </motion.span>
@@ -90,7 +94,6 @@ function FilterDropdown({
             className="absolute left-0 top-full z-50 mt-2 min-w-[170px] overflow-hidden rounded-[14px] bg-white py-1.5"
             style={{ border: "1px solid rgba(35,32,31,0.08)" }}
           >
-            {/* "Todos" sempre visível */}
             <motion.button
               type="button"
               onClick={() => { onChange(""); setOpen(false); }}
@@ -99,7 +102,7 @@ function FilterDropdown({
               className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-semibold"
               style={{ color: !value ? "#F68D3D" : "#A08E7E" }}
             >
-              <span className="w-4 shrink-0">
+              <span className="w-4 shrink-0" style={{ color: "#F68D3D" }}>
                 {!value && <Check size={12} />}
               </span>
               Todos
@@ -129,49 +132,44 @@ function FilterDropdown({
 
 /* ── Componente principal ───────────────────────────────────────── */
 export function TimelineClient({ creators }: Props) {
-  const [ano, setAno] = useState("");
-  const [mes, setMes] = useState("");
-  const [canal, setCanal] = useState("");
+  const [ano, setAno]         = useState("");
+  const [mes, setMes]         = useState("");
+  const [canal, setCanal]     = useState("");
   const [analista, setAnalista] = useState("");
-  const [status, setStatus] = useState("");
+  const [status, setStatus]   = useState("");
 
-  /* Anos disponíveis dinamicamente */
   const anosDisponiveis = useMemo(() => {
-    const anos = [...new Set(creators.map((c) => String(new Date(c.created_at).getFullYear())))];
-    return anos.sort((a, b) => Number(b) - Number(a));
+    const set = new Set(creators.map((c) => String(new Date(c.created_at).getFullYear())));
+    return [...set].sort((a, b) => Number(b) - Number(a));
   }, [creators]);
 
-  /* Creators filtrados */
-  const filtered = useMemo(() => {
-    return creators.filter((c) => {
-      const d = new Date(c.created_at);
-      if (ano    && String(d.getFullYear())      !== ano)     return false;
-      if (mes    && String(d.getMonth())          !== mes)     return false;
-      if (canal  && c.canal                       !== canal)   return false;
-      if (analista && c.analista                  !== analista) return false;
-      if (status && c.status                      !== status)  return false;
-      return true;
-    });
-  }, [creators, ano, mes, canal, analista, status]);
+  const filtered = useMemo(() => creators.filter((c) => {
+    const d = new Date(c.created_at);
+    if (ano      && String(d.getFullYear()) !== ano)      return false;
+    if (mes      && String(d.getMonth())    !== mes)      return false;
+    if (canal    && c.canal                !== canal)     return false;
+    if (analista && c.analista             !== analista)  return false;
+    if (status   && c.status               !== status)   return false;
+    return true;
+  }), [creators, ano, mes, canal, analista, status]);
 
-  /* Agrupado por dia */
+  /* Agrupa por dia */
   const grouped = useMemo(() => {
     const sorted = [...filtered].sort(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
-    const groups: Record<string, Creator[]> = {};
+    const map: Record<string, Creator[]> = {};
     sorted.forEach((c) => {
-      const key = new Date(c.created_at).toDateString();
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(c);
+      const k = new Date(c.created_at).toDateString();
+      if (!map[k]) map[k] = [];
+      map[k].push(c);
     });
-    return Object.entries(groups).map(([key, items]) => ({
-      key, label: formatDateLabel(items[0].created_at), items,
+    return Object.entries(map).map(([k, items]) => ({
+      k, dayLabel: formatDayLabel(items[0].created_at), items,
     }));
   }, [filtered]);
 
-  const hasFilters = ano || mes || canal || analista || status;
-
+  const hasFilters = !!(ano || mes || canal || analista || status);
   function clearAll() { setAno(""); setMes(""); setCanal(""); setAnalista(""); setStatus(""); }
 
   return (
@@ -184,56 +182,40 @@ export function TimelineClient({ creators }: Props) {
         </p>
       </div>
 
-      {/* ── Barra de filtros — fundo laranja, dropdowns em linha ───── */}
-      <div className="mb-4 rounded-[20px] px-4 py-3" style={{ background: "#F68D3D" }}>
+      {/* ── Barra de filtros — laranja muito claro (subtom) ─────────── */}
+      <div
+        className="mb-4 rounded-[20px] px-4 py-3"
+        style={{ background: "rgba(246,141,61,0.10)" }}
+      >
         <div
           className="flex items-center gap-2 overflow-x-auto"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           <FilterDropdown
-            label="Ano"
-            value={ano}
-            onChange={setAno}
+            label="Ano" value={ano} onChange={setAno}
             options={anosDisponiveis.map((a) => ({ label: a, value: a }))}
           />
-
-          <div className="h-4 w-px shrink-0" style={{ background: "rgba(35,32,31,0.18)" }} />
-
+          <div className="h-4 w-px shrink-0" style={{ background: "rgba(246,141,61,0.30)" }} />
           <FilterDropdown
-            label="Mês"
-            value={mes}
-            onChange={setMes}
-            options={MONTHS.map((m, idx) => ({ label: m, value: String(idx) }))}
+            label="Mês" value={mes} onChange={setMes}
+            options={MONTHS.map((m, i) => ({ label: m, value: String(i) }))}
           />
-
-          <div className="h-4 w-px shrink-0" style={{ background: "rgba(35,32,31,0.18)" }} />
-
+          <div className="h-4 w-px shrink-0" style={{ background: "rgba(246,141,61,0.30)" }} />
           <FilterDropdown
-            label="Canal"
-            value={canal}
-            onChange={setCanal}
+            label="Canal" value={canal} onChange={setCanal}
             options={CANAIS.map((c) => ({ label: c, value: c }))}
           />
-
-          <div className="h-4 w-px shrink-0" style={{ background: "rgba(35,32,31,0.18)" }} />
-
+          <div className="h-4 w-px shrink-0" style={{ background: "rgba(246,141,61,0.30)" }} />
           <FilterDropdown
-            label="Analista"
-            value={analista}
-            onChange={setAnalista}
+            label="Analista" value={analista} onChange={setAnalista}
             options={ANALISTAS.map((a) => ({ label: a, value: a }))}
           />
-
-          <div className="h-4 w-px shrink-0" style={{ background: "rgba(35,32,31,0.18)" }} />
-
+          <div className="h-4 w-px shrink-0" style={{ background: "rgba(246,141,61,0.30)" }} />
           <FilterDropdown
-            label="Status"
-            value={status}
-            onChange={setStatus}
+            label="Status" value={status} onChange={setStatus}
             options={STATUS_LIST.map((s) => ({ label: s, value: s }))}
           />
 
-          {/* Limpar filtros — visível no fundo laranja */}
           <AnimatePresence>
             {hasFilters && (
               <motion.button
@@ -242,11 +224,11 @@ export function TimelineClient({ creators }: Props) {
                 exit={{ opacity: 0, scale: 0.85 }}
                 type="button"
                 onClick={clearAll}
-                whileHover={{ backgroundColor: "rgba(35,32,31,0.12)" }}
+                whileHover={{ backgroundColor: "rgba(246,141,61,0.20)" }}
                 whileTap={{ scale: 0.96 }}
                 transition={{ duration: 0.15 }}
                 className="ml-auto flex shrink-0 items-center gap-1 rounded-[20px] px-3 py-2 text-[12px] font-bold"
-                style={{ color: "#23201F" }}
+                style={{ color: "#C96B1A" }}
               >
                 <X size={11} />
                 Limpar
@@ -255,7 +237,6 @@ export function TimelineClient({ creators }: Props) {
           </AnimatePresence>
         </div>
 
-        {/* Contador quando filtrado — sobre fundo laranja */}
         <AnimatePresence>
           {hasFilters && (
             <motion.p
@@ -265,18 +246,18 @@ export function TimelineClient({ creators }: Props) {
               transition={{ duration: 0.18 }}
               className="mt-2 pt-2 text-[12px] font-semibold"
               style={{
-                borderTop: "1px solid rgba(35,32,31,0.15)",
-                color: "rgba(35,32,31,0.65)",
+                borderTop: "1px solid rgba(246,141,61,0.20)",
+                color: "#C96B1A",
               }}
             >
-              <span className="font-bold" style={{ color: "#23201F" }}>{filtered.length}</span>
+              <span className="font-bold" style={{ color: "#D97A33" }}>{filtered.length}</span>
               {" "}de {creators.length} registros
             </motion.p>
           )}
         </AnimatePresence>
       </div>
 
-      {/* ── Feed cronológico ─────────────────────────────────────── */}
+      {/* ── Feed ────────────────────────────────────────────────────── */}
       {filtered.length === 0 ? (
         <motion.div
           initial={{ opacity: 0 }}
@@ -289,81 +270,87 @@ export function TimelineClient({ creators }: Props) {
           </p>
         </motion.div>
       ) : (
-        <div className="flex flex-col gap-5">
-          {grouped.map(({ key, label, items }, gi) => (
-            <div key={key}>
-              {/* Separador de data */}
-              <motion.div
-                initial={{ opacity: 0, x: -12 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.22, ease: [0, 0, 0.2, 1], delay: gi * 0.05 }}
-                className="mb-3 flex items-center gap-3"
+        <div className="flex flex-col gap-3">
+          {grouped.map(({ k, dayLabel, items }, gi) => (
+            <motion.div
+              key={k}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.24, ease: [0, 0, 0.2, 1], delay: gi * 0.05 }}
+              className="overflow-hidden rounded-[20px] bg-white"
+            >
+              {/* Data dentro do bloco */}
+              <div
+                className="px-5 py-2.5"
+                style={{ borderBottom: "1px solid rgba(35,32,31,0.05)" }}
               >
-                <div className="h-px flex-1" style={{ background: "rgba(35,32,31,0.08)" }} />
                 <span className="text-[11px] font-bold uppercase tracking-[0.5px] text-[#A08E7E]">
-                  {label}
+                  {dayLabel}
                 </span>
-                <div className="h-px flex-1" style={{ background: "rgba(35,32,31,0.08)" }} />
-              </motion.div>
-
-              {/* Cards */}
-              <div className="flex flex-col gap-2">
-                {items.map((c, i) => {
-                  const ss = STATUS_STYLE[c.status];
-                  return (
-                    <motion.div
-                      key={c.id}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        duration: 0.22,
-                        ease: [0, 0, 0.2, 1],
-                        delay: gi * 0.05 + Math.min(i * 0.03, 0.18),
-                      }}
-                      className="flex items-center gap-4 rounded-[16px] bg-white px-5 py-3.5"
-                    >
-                      {/* Dot semântico */}
-                      <div className="h-2 w-2 shrink-0 rounded-pill" style={{ backgroundColor: ss.dot }} />
-
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[14px] font-bold text-ink-500 truncate">
-                            {c.perfil_handle || c.nome || "Creator sem @"}
-                          </span>
-                          {c.nome && c.perfil_handle && (
-                            <>
-                              <ArrowRight size={11} className="text-[#A08E7E] shrink-0" />
-                              <span className="text-[13px] font-semibold text-[#A08E7E] truncate">{c.nome}</span>
-                            </>
-                          )}
-                        </div>
-                        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0 text-[12px] font-semibold text-[#A08E7E]">
-                          <span>{c.canal}</span>
-                          {c.analista && <><span>·</span><span>{c.analista}</span></>}
-                          {c.segmento !== "—" && <><span>·</span><span>{c.segmento}</span></>}
-                          {c.tier !== "—" && <><span>·</span><span>{c.tier}</span></>}
-                        </div>
-                      </div>
-
-                      {/* Status badge — cores semânticas */}
-                      <div
-                        className="shrink-0 flex items-center gap-1.5 rounded-[8px] px-2.5 py-1 text-[12px] font-bold"
-                        style={{ backgroundColor: ss.bg, color: ss.color }}
-                      >
-                        <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: ss.dot }} />
-                        {c.status}
-                      </div>
-
-                      {/* Tempo */}
-                      <span className="shrink-0 text-[12px] font-semibold text-[#A08E7E]">
-                        {timeAgo(c.created_at)}
-                      </span>
-                    </motion.div>
-                  );
-                })}
               </div>
-            </div>
+
+              {/* Entradas do dia */}
+              {items.map((c, i) => {
+                const ss = STATUS_STYLE[c.status];
+                return (
+                  <motion.div
+                    key={c.id}
+                    initial={{ opacity: 0, x: -6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{
+                      duration: 0.2,
+                      ease: [0, 0, 0.2, 1],
+                      delay: gi * 0.05 + Math.min(i * 0.03, 0.15),
+                    }}
+                    className="flex items-center gap-3 px-5 py-3.5"
+                    style={{
+                      borderBottom: i < items.length - 1
+                        ? "1px solid rgba(35,32,31,0.04)"
+                        : undefined,
+                    }}
+                  >
+                    {/* Dot de status */}
+                    <div
+                      className="h-2 w-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: ss.dot }}
+                    />
+
+                    {/* Identidade */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0">
+                        <span className="text-[14px] font-bold text-ink-500">
+                          {c.perfil_handle || "sem @"}
+                        </span>
+                        {c.nome && (
+                          <span className="text-[13px] font-semibold text-[#A08E7E]">
+                            · {c.nome}
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[12px] font-semibold text-[#BBA998]">
+                        <span>{c.canal}</span>
+                        {c.analista && <><span>·</span><span>{c.analista}</span></>}
+                        {c.segmento !== "—" && <><span>·</span><span>{c.segmento}</span></>}
+                        {c.tier !== "—" && <><span>·</span><span>{c.tier}</span></>}
+                      </div>
+                    </div>
+
+                    {/* Status badge */}
+                    <div
+                      className="shrink-0 flex items-center gap-1.5 rounded-[8px] px-2.5 py-1 text-[12px] font-bold"
+                      style={{ backgroundColor: ss.bg, color: ss.color }}
+                    >
+                      {c.status}
+                    </div>
+
+                    {/* Tempo */}
+                    <span className="shrink-0 text-[11px] font-semibold text-[#BBA998]">
+                      {timeAgo(c.created_at)}
+                    </span>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
           ))}
         </div>
       )}
