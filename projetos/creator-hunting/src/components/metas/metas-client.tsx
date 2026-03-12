@@ -87,19 +87,29 @@ function ProgressBar({ pct, delay }: { pct: number; delay: number }) {
 }
 
 /* ── KPI Box ────────────────────────────────────────────────────── */
-function KpiBox({ label, value, suffix = "", sublabel, accent }: {
-  label: string; value: number; suffix?: string; sublabel?: string; accent?: boolean;
+type KpiVariant = "neutral" | "orange" | "blue" | "green";
+
+const KPI_VARIANT: Record<KpiVariant, { bg: string; numColor: string; dotColor: string }> = {
+  neutral: { bg: "rgba(35,32,31,0.05)",   numColor: "#23201F", dotColor: "#23201F" },
+  orange:  { bg: "rgba(246,141,61,0.10)", numColor: "#C96B1A", dotColor: "#F68D3D" },
+  blue:    { bg: "rgba(37,99,235,0.07)",  numColor: "#1D4ED8", dotColor: "#3B82F6" },
+  green:   { bg: "rgba(22,163,74,0.08)",  numColor: "#15803D", dotColor: "#16A34A" },
+};
+
+function KpiBox({ label, value, suffix = "", variant = "neutral" }: {
+  label: string; value: number; suffix?: string; variant?: KpiVariant;
 }) {
+  const v = KPI_VARIANT[variant];
   return (
     <div
-      className="flex flex-col justify-between rounded-[16px] p-4"
-      style={{ background: accent ? "rgba(246,141,61,0.07)" : "rgba(35,32,31,0.04)" }}
+      className="flex flex-col rounded-[16px] p-4"
+      style={{ background: v.bg }}
     >
-      <span className="mb-2 text-[10px] font-bold uppercase tracking-[0.5px] text-[#A08E7E]">{label}</span>
-      <div className="flex items-end gap-0.5">
-        <AnimNum value={value} suffix={suffix} size={36} color={accent ? "#D97A33" : "#23201F"} />
+      <div className="mb-3 flex items-center gap-1.5">
+        <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: v.dotColor }} />
+        <span className="text-[10px] font-bold uppercase tracking-[0.5px] text-[#A08E7E]">{label}</span>
       </div>
-      {sublabel && <span className="mt-1 text-[11px] font-semibold text-[#A08E7E]">{sublabel}</span>}
+      <AnimNum value={value} suffix={suffix} size={40} color={v.numColor} />
     </div>
   );
 }
@@ -204,31 +214,33 @@ function AnalistaCard({
         </div>
       </div>
 
-      {/* ── 4 KPI boxes ────────────────────────────────────────────── */}
-      <div className="grid grid-cols-4 gap-2 p-4">
-        <KpiBox label="Contatos / sem" value={meta.contatosSemana} />
-        <KpiBox label="Cadastros / sem" value={meta.cadastrosSemana} accent />
-        <KpiBox label="Tx. resposta" value={meta.txResposta} suffix="%" />
-        <KpiBox label="Tx. ativação" value={meta.txAtivacao} suffix="%" />
+      {/* ── 4 KPI boxes — metas configuradas ───────────────────────── */}
+      <div className="grid grid-cols-4 gap-2 p-4 pb-2">
+        <KpiBox label="Contatos / sem" value={meta.contatosSemana} variant="neutral" />
+        <KpiBox label="Cadastros / sem" value={meta.cadastrosSemana} variant="orange" />
+        <KpiBox label="Tx. resposta" value={meta.txResposta} suffix="%" variant="blue" />
+        <KpiBox label="Tx. ativação" value={meta.txAtivacao} suffix="%" variant="green" />
       </div>
 
-      {/* ── Linha de stats reais ────────────────────────────────────── */}
-      <div
-        className="mx-4 mb-4 grid grid-cols-3 gap-2 rounded-[14px] p-3"
-        style={{ background: "rgba(35,32,31,0.04)" }}
-      >
-        <div className="text-center">
-          <p className="text-[22px] font-bold text-ink-500">{stats.semana}</p>
-          <p className="text-[10px] font-bold uppercase tracking-[0.4px] text-[#A08E7E]">Esta semana</p>
-        </div>
-        <div className="text-center" style={{ borderLeft: "1px solid rgba(35,32,31,0.06)", borderRight: "1px solid rgba(35,32,31,0.06)" }}>
-          <p className="text-[22px] font-bold text-ink-500">{stats.pacePrevisto}</p>
-          <p className="text-[10px] font-bold uppercase tracking-[0.4px] text-[#A08E7E]">Pace previsto</p>
-        </div>
-        <div className="text-center">
-          <p className="text-[22px] font-bold text-ink-500">{stats.total}</p>
-          <p className="text-[10px] font-bold uppercase tracking-[0.4px] text-[#A08E7E]">Total geral</p>
-        </div>
+      {/* ── Stats reais do banco ─────────────────────────────────────── */}
+      <div className="grid grid-cols-3 px-4 pb-4 pt-2">
+        {[
+          { label: "Esta semana", value: stats.semana },
+          { label: "Pace previsto", value: stats.pacePrevisto },
+          { label: "Total geral",  value: stats.total },
+        ].map(({ label, value }, idx) => (
+          <div
+            key={label}
+            className="flex flex-col items-center py-4"
+            style={{
+              borderLeft:  idx > 0 ? "1px solid rgba(35,32,31,0.06)" : undefined,
+              borderRight: idx < 2 ? "1px solid rgba(35,32,31,0.06)" : undefined,
+            }}
+          >
+            <span className="text-[32px] font-bold leading-none text-ink-500">{value}</span>
+            <span className="mt-1.5 text-[10px] font-bold uppercase tracking-[0.5px] text-[#A08E7E]">{label}</span>
+          </div>
+        ))}
       </div>
 
       {/* ── Toggle edição ───────────────────────────────────────────── */}

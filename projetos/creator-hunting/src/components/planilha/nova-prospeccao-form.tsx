@@ -218,10 +218,9 @@ export function NovaProspeccaoForm() {
                   <label className={LABEL_STYLE}>Perfil / @*</label>
                   <input
                     className={FIELD_STYLE}
-                    placeholder="@perfil ou cole o link"
-                    value={form.perfil_handle}
-                    onChange={(e) => set("perfil_handle", e.target.value)}
-                    required
+                  placeholder="@perfil ou cole o link"
+                  value={form.perfil_handle}
+                  onChange={(e) => set("perfil_handle", e.target.value)}
                   />
                 </div>
 
