@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, ChevronDown, Check, X } from "lucide-react";
 import { ANALISTAS, CANAIS, STATUS_LIST, STATUS_STYLE, type Creator } from "@/types/creator";
@@ -30,7 +31,7 @@ function formatDayLabel(dateStr: string): string {
 const MONTHS = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
                 "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
-/* ── Dropdown — sobre fundo laranja claro ────────────────────────── */
+/* ── Dropdown via Portal — evita corte por overflow do layout ────── */
 function FilterDropdown({
   label, options, value, onChange,
 }: {
@@ -40,30 +41,98 @@ function FilterDropdown({
   onChange: (v: string) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState({ top: 0, left: 0 });
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const isActive = !!value;
   const displayLabel = isActive
     ? (options.find((o) => o.value === value)?.label ?? label)
     : label;
 
+  function openMenu() {
+    if (!btnRef.current) return;
+    const r = btnRef.current.getBoundingClientRect();
+    setCoords({ top: r.bottom + window.scrollY + 6, left: r.left + window.scrollX });
+    setOpen(true);
+  }
+
   useEffect(() => {
+    if (!open) return;
     function onOut(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      if (btnRef.current?.contains(t) || menuRef.current?.contains(t)) return;
+      setOpen(false);
     }
+    function onScroll() { setOpen(false); }
     document.addEventListener("mousedown", onOut);
-    return () => document.removeEventListener("mousedown", onOut);
-  }, []);
+    document.addEventListener("scroll", onScroll, true);
+    return () => {
+      document.removeEventListener("mousedown", onOut);
+      document.removeEventListener("scroll", onScroll, true);
+    };
+  }, [open]);
+
+  const menu = (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          ref={menuRef}
+          initial={{ opacity: 0, y: -4, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -4, scale: 0.97 }}
+          transition={{ duration: 0.14, ease: [0, 0, 0.2, 1] }}
+          style={{
+            position: "absolute",
+            top: coords.top,
+            left: coords.left,
+            zIndex: 9999,
+            minWidth: 180,
+            background: "#FFFFFF",
+            borderRadius: 14,
+            border: "1px solid rgba(35,32,31,0.08)",
+            padding: "6px 0",
+          }}
+        >
+          <motion.button
+            type="button"
+            onClick={() => { onChange(""); setOpen(false); }}
+            whileHover={{ backgroundColor: "#F4EEE5" }}
+            transition={{ duration: 0.1 }}
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-semibold"
+            style={{ color: !value ? "#F68D3D" : "#A08E7E" }}
+          >
+            <span className="w-4 shrink-0" style={{ color: "#F68D3D" }}>
+              {!value && <Check size={12} />}
+            </span>
+            Todos
+          </motion.button>
+          <div className="mx-3 mb-1 h-px" style={{ background: "rgba(35,32,31,0.06)" }} />
+          {options.map((opt) => (
+            <motion.button
+              key={opt.value}
+              type="button"
+              onClick={() => { onChange(opt.value === value ? "" : opt.value); setOpen(false); }}
+              whileHover={{ backgroundColor: "#F4EEE5" }}
+              transition={{ duration: 0.1 }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-semibold text-ink-500"
+            >
+              <span className="w-4 shrink-0" style={{ color: "#F68D3D" }}>
+                {opt.value === value && <Check size={12} />}
+              </span>
+              {opt.label}
+            </motion.button>
+          ))}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 
   return (
-    <div ref={ref} className="relative shrink-0">
-      {/*
-        Barra é laranja claro (#FDF0E5-ish).
-        Inativo  → laranja médio translúcido
-        Ativo    → laranja sólido #F68D3D + texto branco
-      */}
+    <div className="relative shrink-0">
       <motion.button
+        ref={btnRef}
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={openMenu}
         initial={false}
         animate={{
           backgroundColor: isActive ? "#F68D3D" : "rgba(246,141,61,0.18)",
@@ -83,49 +152,7 @@ function FilterDropdown({
           <ChevronDown size={12} />
         </motion.span>
       </motion.button>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -4, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -4, scale: 0.97 }}
-            transition={{ duration: 0.14, ease: [0, 0, 0.2, 1] }}
-            className="absolute left-0 top-full z-50 mt-2 min-w-[170px] overflow-hidden rounded-[14px] bg-white py-1.5"
-            style={{ border: "1px solid rgba(35,32,31,0.08)" }}
-          >
-            <motion.button
-              type="button"
-              onClick={() => { onChange(""); setOpen(false); }}
-              whileHover={{ backgroundColor: "#F4EEE5" }}
-              transition={{ duration: 0.1 }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-semibold"
-              style={{ color: !value ? "#F68D3D" : "#A08E7E" }}
-            >
-              <span className="w-4 shrink-0" style={{ color: "#F68D3D" }}>
-                {!value && <Check size={12} />}
-              </span>
-              Todos
-            </motion.button>
-            <div className="mx-3 mb-1 h-px" style={{ background: "rgba(35,32,31,0.06)" }} />
-            {options.map((opt) => (
-              <motion.button
-                key={opt.value}
-                type="button"
-                onClick={() => { onChange(opt.value === value ? "" : opt.value); setOpen(false); }}
-                whileHover={{ backgroundColor: "#F4EEE5" }}
-                transition={{ duration: 0.1 }}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-semibold text-ink-500"
-              >
-                <span className="w-4 shrink-0" style={{ color: "#F68D3D" }}>
-                  {opt.value === value && <Check size={12} />}
-                </span>
-                {opt.label}
-              </motion.button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {typeof document !== "undefined" && createPortal(menu, document.body)}
     </div>
   );
 }
