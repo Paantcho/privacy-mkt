@@ -48,6 +48,28 @@ Dark mode Text:      #F4EEE5
 
 ---
 
+## Sistema de Cores de Botões/Pills (regra universal)
+
+```
+LARANJA #F68D3D  = ação primária (Salvar, Confirmar, Buscar, Enviar)
+CARVÃO  #23201F  = filtro/estado ATIVO (pill selecionada, dropdown filtrado)
+BRANCO/transparente = estado inativo/padrão
+```
+
+- Orange **apenas** quando o usuário está prestes a executar uma ação
+- Charcoal quando algo está **selecionado ou filtrado** (estado de dados)
+- Nunca usar orange como indicador de filtro ativo — é reservado para CTA
+
+Implementação:
+```tsx
+<motion.button
+  animate={{ backgroundColor: active ? "#23201F" : "rgba(0,0,0,0)", color: active ? "#FFFFFF" : "#A08E7E" }}
+  whileHover={!active ? { backgroundColor: "rgba(213,203,192,0.4)", color: "#23201F" } : undefined}
+/>
+```
+
+---
+
 ## Proibições Globais (valem em TODOS os projetos)
 
 > Adicione aqui qualquer proibição que surgir durante o desenvolvimento.
