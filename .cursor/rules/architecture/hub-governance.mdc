@@ -1,0 +1,96 @@
+---
+alwaysApply: true
+---
+
+# PRIVACY HUB — Governança e Estrutura
+
+## Conceito
+
+O Privacy Hub é um workspace de desenvolvimento pessoal.
+Não é um produto SaaS. É uma base para construir ferramentas e projetos rapidamente.
+
+Cada projeto é criado como uma subpasta isolada em `projetos/`.
+Todos os projetos compartilham o mesmo design system e as mesmas regras.
+
+---
+
+## Estrutura do repositório
+
+```
+privacy-mkt/
+  .cursor/rules/           ← regras que valem para TODOS os projetos
+    00-privacy-master.mdc
+    design/design-system.mdc
+    motion/motion-system.mdc
+    architecture/hub-governance.mdc (este arquivo)
+
+  design-system/           ← biblioteca compartilhada
+    components/ui/         ← Button, Modal, Select, Toast, SlidingTabs, TabContent, Portal
+    styles/
+      globals.css          ← tokens CSS + keyframes
+      tailwind.config.ts   ← mapeamento Tailwind
+
+  agents/
+    orquestrador/
+      SOUL.md              ← comportamento do orquestrador
+
+  memory/
+    MEMORY.md              ← decisões permanentes (valem para TODOS os projetos)
+    WORKING.md             ← projeto em andamento agora
+
+  projetos/                ← cada projeto em pasta separada
+    [nome-do-projeto]/
+      src/
+      package.json
+      tailwind.config.ts   ← estende design-system/styles/tailwind.config.ts
+      (etc.)
+```
+
+---
+
+## Criação de novo projeto
+
+Quando o usuário pedir um novo projeto:
+
+1. Ler `memory/MEMORY.md` — aplicar todas as decisões permanentes
+2. Criar pasta `projetos/<nome>/`
+3. Inicializar estrutura Next.js (ou outro stack pedido)
+4. Copiar referência ao `design-system/` — nunca duplicar os componentes
+5. Configurar `globals.css` apontando para `design-system/styles/globals.css`
+6. Atualizar `memory/WORKING.md`
+
+---
+
+## Regra de memória
+
+**`memory/MEMORY.md`** é o arquivo mais importante do hub.
+
+Toda decisão tomada que vale para projetos futuros vai para lá.
+Exemplos de decisões permanentes:
+- "Nunca usar botão com animação piscante"
+- "Sempre usar dark mode como padrão"
+- "Sidebar sempre à esquerda, 250px"
+- "Formulários sempre com auto-draft em localStorage"
+
+Antes de criar qualquer projeto, o orquestrador lê esse arquivo.
+
+---
+
+## Stack padrão dos projetos
+
+Next.js 15 · TypeScript · Tailwind 4 · Framer Motion · Vercel
+
+Dependências de design system (instalar em cada projeto):
+```
+framer-motion
+zustand
+lucide-react
+```
+
+---
+
+## Segurança
+
+- NUNCA expor API keys em código
+- `.env.local` SEMPRE no `.gitignore`
+- Validação server-side obrigatória em toda API route

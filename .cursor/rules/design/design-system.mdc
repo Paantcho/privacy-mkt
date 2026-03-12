@@ -1,0 +1,151 @@
+---
+alwaysApply: true
+---
+
+# PRIVACY — Design System
+
+## Identidade
+
+Hub de desenvolvimento pessoal da Privacy.
+Stack: Next.js 15 · TypeScript · Tailwind · Framer Motion · Vercel.
+Idioma: português brasileiro sempre.
+
+---
+
+## Paleta de cores
+
+```
+--primary-500: #F68D3D   ← laranja — cor primária / accent
+--ink-500:     #23201F   ← carvão — texto principal / escuro
+--bg-base-200: #F4EEE5   ← off-white — fundo geral da app
+--surface-500: #FFFFFF   ← branco — cards, modais
+
+Dark mode:
+--bg-base-200: #23201F   ← carvão vira fundo
+--surface-500: #2E2B2A   ← carvão clarinho vira card
+--ink-500:     #F4EEE5   ← off-white vira texto
+```
+
+Escala completa em `design-system/styles/globals.css`.
+Tailwind aliases em `design-system/styles/tailwind.config.ts`.
+
+---
+
+## Tipografia — APENAS Urbanist
+
+```
+Fonte: 'Urbanist' (Google Fonts) — Bold 700, SemiBold 600, Regular 400
+NUNCA use Inter, Roboto, Arial ou qualquer outra.
+
+Tamanhos:
+ heading-xl:  36px / weight 700
+ heading-lg:  28px / weight 600
+ heading-md:  24px / weight 600
+ heading-sm:  20px / weight 700
+ label-lg:    18px / weight 600 / tracking 0.3px
+ label-md:    16px / weight 600 / tracking 0.3px
+ label-sm:    14px / weight 600 / tracking 0.3px
+ caption:     10px / weight 700 / tracking 0.3px
+```
+
+---
+
+## Border Radius
+
+```
+--r-sm:     6px
+--r-md:     10px
+--r-lg:     16px
+--r-xl:     20px
+--r-2xl:    30px
+--r-pill:   9999px
+--r-button: 18px   ← botões
+--r-card:   20px   ← cards padrão
+--r-input:  12px   ← inputs
+```
+
+---
+
+## Botões — valores exatos
+
+```
+Primário:
+ background: #F68D3D (laranja)
+ text: #23201F (carvão)
+ padding: px-4 py-3 (16px × 12px)
+ border-radius: rounded-[18px]
+ font: Urbanist SemiBold 18px tracking-[0.3px]
+ hover: scale(1.03) + #F79E55
+ tap: scale(0.96) + #D97A33
+ ZERO border, ZERO box-shadow
+
+Secundário:
+ background: #F4EEE5 (off-white)
+ text: #23201F
+ mesmos padding e border-radius
+
+Ghost:
+ background: transparent
+ text: #7A7370
+ hover: rgba(35,32,31,0.06) + scale(1.03)
+```
+
+---
+
+## Modais
+
+3 camadas OBRIGATÓRIAS — ver `design-system/components/ui/modal.tsx`.
+
+```
+Camada 1 — Overlay:
+ rgba(35,32,31,0) → rgba(35,32,31,0.70) + blur 0→12px
+
+Camada 2 — Container:
+ bg #FFFFFF, border-radius 20px, padding 28px
+ scale(0.88) + y(20) → scale(1) + y(0)
+
+Camada 3 — Botão X:
+ hover: rotate(90°) scale(1.1)
+```
+
+Portal OBRIGATÓRIO (createPortal → document.body).
+NUNCA `if (!open) return null`.
+NUNCA modal sem overlay blur.
+
+---
+
+## Inputs
+
+```tsx
+<input className="
+ h-11 px-3.5 w-full rounded-[12px] border border-transparent
+ bg-[#F4EEE5] font-urbanist text-[15px] text-[#23201F]
+ outline-none placeholder:text-[#A08E7E]
+ hover:border-[rgba(35,32,31,0.15)]
+ focus:border-[#F68D3D] focus:shadow-[0_0_0_3px_rgba(246,141,61,0.18)]
+ transition-[border-color,box-shadow] duration-150
+" />
+```
+
+---
+
+## Fundo da aplicação
+
+- Background geral: **#F4EEE5** (nunca branco, nunca cinza puro)
+- Cards sobre o fundo: **#FFFFFF**
+- Dark mode: fundo **#23201F**, cards **#2E2B2A**
+- NUNCA `bg-gray-*`, `bg-slate-*`, `bg-zinc-*`, `bg-neutral-*`
+
+---
+
+## Proibições absolutas
+
+1. ZERO box-shadow em cards, modais, painéis de UI
+2. NUNCA outra fonte além de Urbanist
+3. NUNCA `bg-gray-*`, `bg-slate-*`, `bg-zinc-*`
+4. NUNCA `transition: all`
+5. NUNCA modal sem overlay blur — sempre 3 camadas
+6. NUNCA `display: none` para esconder elementos animados
+7. NUNCA valores de cor fora da paleta acima
+8. NUNCA `<select>` nativo — sempre `Select` do design-system
+9. NUNCA `alert()` ou `confirm()` — sempre `toast.*`

@@ -1,0 +1,103 @@
+---
+alwaysApply: true
+---
+
+# PRIVACY HUB — Índice Mestre de Regras
+
+Toda sessão começa aqui. Leia antes de qualquer ação.
+
+---
+
+## Arquivos de regra ativos
+
+| Arquivo | Domínio | Conteúdo |
+|---|---|---|
+| `.cursor/rules/design/design-system.mdc` | design | Tokens, tipografia, cores, componentes, proibições |
+| `.cursor/rules/motion/motion-system.mdc` | motion | Framer Motion, easings, modais, pills, toasts |
+| `.cursor/rules/architecture/hub-governance.mdc` | architecture | Estrutura do hub, projetos, memória |
+
+---
+
+## Componentes reutilizáveis (sempre usar — nunca reinventar)
+
+| Componente | Arquivo | Para que serve |
+|---|---|---|
+| `SlidingTabs` | `design-system/components/ui/sliding-tabs.tsx` | Tabs com pill spring laranja |
+| `TabContent` | `design-system/components/ui/tab-content.tsx` | Conteúdo com animação direcional |
+| `Modal` | `design-system/components/ui/modal.tsx` | Modal 3 camadas + Portal |
+| `Portal` | `design-system/components/ui/portal.tsx` | Obrigatório em modais |
+| `Select` | `design-system/components/ui/select.tsx` | Dropdown customizado — zero select nativo |
+| `ToastProvider` + `toast.*` | `design-system/components/ui/toast.tsx` | Sistema de toast Privacy |
+| `Button` | `design-system/components/ui/button.tsx` | MotionButton com variantes |
+
+---
+
+## Memória do hub
+
+| Arquivo | Conteúdo |
+|---|---|
+| `memory/WORKING.md` | Projeto ativo, o que está feito, próxima ação |
+| `memory/MEMORY.md` | Decisões permanentes que valem para TODOS os projetos |
+
+---
+
+## Contexto
+
+- **Hub:** Privacy — workspace de desenvolvimento pessoal
+- **Stack padrão:** Next.js 15 · TypeScript · Tailwind 4 · Framer Motion · Vercel
+- **Design System:** `design-system/` neste repositório
+- **Projetos:** cada um em `projetos/<nome>/`
+- **Idioma:** português brasileiro em todos os outputs
+
+---
+
+## Tokens de marca Privacy
+
+```
+Primária (Laranja):  #F68D3D
+Ink (Carvão):        #23201F
+BG (Off-white):      #F4EEE5
+Surface (Branco):    #FFFFFF
+Dark BG:             #23201F
+Dark Surface:        #2E2B2A
+```
+
+---
+
+## Regras invioláveis
+
+### Design
+- Flat design absoluto — ZERO box-shadow em UI
+- Fonte exclusiva: **Urbanist** (Bold, SemiBold, Regular)
+- Cor primária: **#F68D3D** / Ink: **#23201F**
+- Background da app: **#F4EEE5** — nunca bg-gray, bg-slate, bg-zinc
+- Modais: sempre branco `#FFFFFF` com overlay carvão 70% + blur 12px
+
+### Motion (idêntico ao Hubia — regra universal)
+- **Framer Motion** para todos os componentes React animados
+- CSS keyframes apenas em `globals.css` para ícones SVG
+- Easings canônicos: `ease-std / ease-dec / ease-acc / ease-emp / ease-exp`
+- Botões: `whileHover scale:1.03` + `whileTap scale:0.96`
+- Icon buttons: `whileHover scale:1.12` + `whileTap scale:0.90`
+- Cards: stagger `i * 60ms`, máx 300ms + `whileHover y:-4px`
+- Modal: 3 camadas + AnimatePresence + Portal — NUNCA `if (!open) return null`
+- Dropdowns: AnimatePresence — NUNCA `{open && <div>}` sem animação
+- Selects: sempre `Select` do design-system — nunca `<select>` nativo
+- Toasts: sempre `toast.*` do design-system — nunca `alert()` ou lib externa
+
+### Projetos
+- Cada projeto em `projetos/<nome>/`
+- Todo projeto nasce referenciando o design-system
+- Regras da raiz (`memory/MEMORY.md`) valem para todos
+
+---
+
+## Ciclo obrigatório em toda tarefa
+
+```
+PLAN → listar o que vai fazer
+EXECUTE → escrever seguindo todas as regras
+REFLECT → "Um diretor de arte aprovaria este resultado visualmente?"
+```
+
+Se a resposta for não → corrigir antes de mostrar.

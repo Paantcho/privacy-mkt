@@ -1,0 +1,229 @@
+---
+alwaysApply: true
+---
+
+# PRIVACY — Lei de Motion e Interação
+
+## Princípio
+
+Todo elemento que o usuário pode clicar ou interagir responde visualmente.
+Sem exceção. Se tem `cursor: pointer`, tem animação.
+
+---
+
+## Biblioteca: Framer Motion
+
+Framer Motion para TUDO em componentes React.
+CSS keyframes APENAS em `design-system/styles/globals.css` para ícones SVG via group-hover.
+
+### Easings canônicos
+
+```
+ease-std: cubic-bezier(0.4, 0, 0.2, 1)       ← hover de botões
+ease-dec: cubic-bezier(0.0, 0, 0.2, 1)        ← entrar na tela
+ease-acc: cubic-bezier(0.4, 0, 1.0, 1)        ← sair da tela
+ease-emp: cubic-bezier(0.2, 0, 0.0, 1)        ← pill sidebar
+ease-exp: cubic-bezier(0.34, 1.56, 0.64, 1)   ← ícones, overshoot
+```
+
+NUNCA: `ease`, `linear`, `ease-in-out` diretamente.
+NUNCA: `transition: all`.
+
+---
+
+## Botões
+
+### Primário / Secundário / Ghost
+```tsx
+<motion.button
+  whileHover={{ scale: 1.03 }}
+  whileTap={{ scale: 0.96 }}
+  transition={{ duration: 0.15, ease: [0.34, 1.56, 0.64, 1] }}
+>
+```
+
+### Icon-only
+```tsx
+whileHover={{ scale: 1.12 }}
+whileTap={{ scale: 0.90 }}
+```
+
+### Botão com ícone — variantes propagadas (OBRIGATÓRIO)
+```tsx
+<motion.button
+  initial="rest"
+  whileHover="hovered"
+  whileTap={{ scale: 0.96 }}
+  animate="rest"
+  variants={{
+    rest:    { scale: 1, backgroundColor: "#F68D3D" },
+    hovered: { scale: 1.03, backgroundColor: "#F79E55" },
+  }}
+  transition={{ duration: 0.15, ease: [0.34, 1.56, 0.64, 1] }}
+>
+  <motion.span
+    variants={{ rest: { scale: 1 }, hovered: { scale: 1.2 } }}
+    transition={{ duration: 0.25, ease: [0.34, 1.56, 0.64, 1] }}
+  >
+    <PlusIcon size={16} />
+  </motion.span>
+  Label
+</motion.button>
+```
+
+NUNCA `whileHover` diretamente no `motion.span` filho — o hover não dispara do filho.
+
+---
+
+## Valores dinâmicos — `animate` nunca `style`
+
+```tsx
+// CORRETO
+<motion.button
+  initial={false}
+  animate={{ backgroundColor: isActive ? "#F68D3D" : "rgba(0,0,0,0)" }}
+  whileHover={!isActive ? { backgroundColor: "rgba(213,210,201,0.35)" } : undefined}
+>
+
+// ERRADO — congela o background após o primeiro hover
+<motion.button style={{ background: isActive ? "#F68D3D" : "transparent" }}>
+```
+
+---
+
+## Tabs — pill spring
+
+```tsx
+<motion.div
+  className="pointer-events-none absolute rounded-[9999px]"
+  animate={{ left: pillLeft, width: pillWidth }}
+  transition={{ type: "spring", stiffness: 420, damping: 30, mass: 0.8 }}
+  style={{ top: 6, bottom: 6, background: "#F68D3D" }}
+/>
+```
+
+Container: bg `#FFFFFF`, `rounded-[20px]`, `p-1.5`.
+Botões inativos: hover areia `rgba(213,210,201,0.35)`.
+
+---
+
+## Modais — 3 camadas + Portal (INVIOLÁVEL)
+
+```tsx
+import { Portal } from "@/design-system/components/ui/portal";
+
+<Portal>
+  <AnimatePresence>
+    {open && (
+      <motion.div
+        className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+        initial={{ backgroundColor: "rgba(35,32,31,0)", backdropFilter: "blur(0px)" }}
+        animate={{ backgroundColor: "rgba(35,32,31,0.70)", backdropFilter: "blur(12px)" }}
+        exit={{ backgroundColor: "rgba(35,32,31,0)", backdropFilter: "blur(0px)" }}
+        transition={{ duration: 0.25, ease: [0, 0, 0.2, 1] }}
+        onClick={(e) => e.target === e.currentTarget && onClose()}
+      >
+        <motion.div
+          className="rounded-[20px] bg-white p-7"
+          initial={{ scale: 0.88, y: 20, opacity: 0 }}
+          animate={{ scale: 1, y: 0, opacity: 1 }}
+          exit={{ scale: 0.92, y: 10, opacity: 0 }}
+          transition={{ duration: 0.28, ease: [0, 0, 0.2, 1] }}
+        >
+          <motion.button
+            whileHover={{ rotate: 90, scale: 1.1 }}
+            whileTap={{ rotate: 90, scale: 0.9 }}
+          >
+            <X size={16} />
+          </motion.button>
+        </motion.div>
+      </motion.div>
+    )}
+  </AnimatePresence>
+</Portal>
+```
+
+`if (!open) return null` É PROIBIDO — mata a animação de saída.
+
+---
+
+## Cards — stagger obrigatório
+
+```tsx
+<motion.div
+  initial={{ opacity: 0, y: 16 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.3, ease: [0, 0, 0.2, 1], delay: Math.min(i * 0.06, 0.3) }}
+  whileHover={{ y: -4 }}
+  whileTap={{ scale: 0.98 }}
+>
+```
+
+Cards NUNCA aparecem todos de uma vez.
+
+---
+
+## Transições de página
+
+```tsx
+<AnimatePresence mode="wait">
+  <motion.div
+    key={pathname}
+    initial={{ opacity: 0, y: 12, filter: "blur(4px)" }}
+    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+    exit={{ opacity: 0, y: -8, filter: "blur(3px)" }}
+    transition={{ duration: 0.28, ease: [0, 0, 0.2, 1] }}
+  >
+    {children}
+  </motion.div>
+</AnimatePresence>
+```
+
+---
+
+## Dropdowns
+
+```tsx
+<AnimatePresence>
+  {open && (
+    <motion.div
+      initial={{ opacity: 0, y: -6, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -6, scale: 0.96 }}
+      transition={{ duration: 0.15, ease: [0, 0, 0.2, 1] }}
+    >
+```
+
+`{open && <div>}` sem AnimatePresence É PROIBIDO.
+`shadow-*` em dropdown É PROIBIDO (flat design).
+
+---
+
+## Checklist antes de entregar qualquer componente
+
+- [ ] Todo `<button>` tem `whileHover` + `whileTap`?
+- [ ] Icon buttons: scale 1.12 no hover e 0.90 no tap?
+- [ ] Ícones dentro de botões têm micro-animação semântica (variantes propagadas)?
+- [ ] Cards têm stagger de entrada (i * 0.06)?
+- [ ] Cards clicáveis têm `whileHover={{ y: -4 }}`?
+- [ ] Modais usam AnimatePresence + 3 camadas + Portal?
+- [ ] Dropdowns usam AnimatePresence?
+- [ ] Nenhum `if (!open) return null`?
+- [ ] Nenhum `shadow-*` em UI?
+- [ ] Nenhum `transition: all`?
+- [ ] Valores dinâmicos usam `animate={{ ... }}` e nunca `style={{ ... }}`?
+
+---
+
+## Proibições absolutas
+
+1. `if (!open) return null` em componente animado
+2. `transition: all`
+3. `ease`, `linear`, `ease-in-out`
+4. `box-shadow` / `shadow-*` em cards, modais
+5. `setTimeout` para animações
+6. Elemento clicável sem hover
+7. Cards sem stagger
+8. Modal sem 3 camadas
+9. Modal sem Portal
+10. `style={{ background: condicional }}` em `motion.*` com `whileHover`
