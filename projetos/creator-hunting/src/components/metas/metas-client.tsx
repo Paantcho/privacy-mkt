@@ -122,9 +122,14 @@ function AnalistaCard({
     setEditOpen(false);
   }
 
-  const avatarColor = AVATAR_COLORS[analista] ?? "#23201F";
-  const paceColor = stats.vaiAcertar ? "#16A34A" : stats.pctMes >= 50 ? "#F68D3D" : "#EF4444";
-  const PaceIcon = stats.vaiAcertar ? TrendingUp : stats.pctMes >= 50 ? Minus : TrendingDown;
+  /* Pace — sobre fundo laranja: verde/branco-forte/branco-fraco */
+  const paceGood = stats.vaiAcertar;
+  const paceMid  = !paceGood && stats.pctMes >= 50;
+  const PaceIcon = paceGood ? TrendingUp : paceMid ? Minus : TrendingDown;
+  /* branco total no bom, branco 80% no médio, branco 50% no ruim */
+  const paceTextColor = paceGood ? "#FFFFFF" : paceMid ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.50)";
+  /* barra de progresso: branco opaco no bom, branco 70% médio, branco 40% ruim */
+  const barFill = paceGood ? "rgba(255,255,255,1)" : paceMid ? "rgba(255,255,255,0.70)" : "rgba(255,255,255,0.35)";
 
   return (
     <motion.div
@@ -133,19 +138,22 @@ function AnalistaCard({
       transition={{ duration: 0.32, ease: [0, 0, 0.2, 1], delay }}
       className="overflow-hidden rounded-[24px] bg-white"
     >
-      {/* ── Header escuro ─────────────────────────────────────────── */}
-      <div className="px-6 pt-6 pb-5" style={{ background: "#23201F" }}>
+      {/* ── Header laranja ────────────────────────────────────────── */}
+      <div className="px-6 pt-6 pb-5" style={{ background: "#F68D3D" }}>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
+            {/* Avatar: branco semi-transparente com inicial carvão — contraste sobre laranja */}
             <div
-              className="flex h-12 w-12 items-center justify-center rounded-[14px] text-[20px] font-bold text-white"
-              style={{ backgroundColor: avatarColor }}
+              className="flex h-12 w-12 items-center justify-center rounded-[14px] text-[20px] font-bold"
+              style={{ backgroundColor: "rgba(255,255,255,0.25)", color: "#23201F" }}
             >
               {analista.charAt(0)}
             </div>
             <div>
-              <p className="text-[22px] font-bold leading-tight text-white">{analista}</p>
-              <p className="mt-0.5 text-[12px] font-semibold" style={{ color: "rgba(244,238,229,0.5)" }}>
+              {/* Nome: carvão — máximo contraste sobre laranja */}
+              <p className="text-[22px] font-bold leading-tight" style={{ color: "#23201F" }}>{analista}</p>
+              {/* Foco: carvão 60% — hierarquia secundária */}
+              <p className="mt-0.5 text-[12px] font-semibold" style={{ color: "rgba(35,32,31,0.60)" }}>
                 {meta.focoTier || "Foco não definido"}
               </p>
             </div>
@@ -153,18 +161,17 @@ function AnalistaCard({
 
           {/* Badge tipo + Pace */}
           <div className="flex flex-col items-end gap-2">
+            {/* Badge: carvão sobre branco semi-transparente */}
             <div
               className="rounded-[8px] px-2.5 py-1 text-[11px] font-bold"
-              style={{
-                background: meta.tipo === "Volume" ? "rgba(246,141,61,0.18)" : "rgba(139,92,246,0.18)",
-                color: meta.tipo === "Volume" ? "#F68D3D" : "#A78BFA",
-              }}
+              style={{ background: "rgba(35,32,31,0.15)", color: "#23201F" }}
             >
               {meta.tipo}
             </div>
+            {/* Pace: hierarquia de branco conforme desempenho */}
             <div className="flex items-center gap-1">
-              <PaceIcon size={12} style={{ color: paceColor }} />
-              <span className="text-[12px] font-bold" style={{ color: paceColor }}>
+              <PaceIcon size={12} style={{ color: paceTextColor }} />
+              <span className="text-[12px] font-bold" style={{ color: paceTextColor }}>
                 {Math.round(stats.pctMes)}% do mês
               </span>
             </div>
@@ -174,20 +181,24 @@ function AnalistaCard({
         {/* Progress bar dentro do header */}
         <div className="mt-4">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-[0.5px]" style={{ color: "rgba(244,238,229,0.4)" }}>
+            {/* Label: carvão 50% */}
+            <span className="text-[10px] font-bold uppercase tracking-[0.5px]" style={{ color: "rgba(35,32,31,0.50)" }}>
               Prospecções este mês
             </span>
-            <span className="text-[13px] font-bold text-white">
-              {stats.mes} <span style={{ color: "rgba(244,238,229,0.4)" }}>/ {meta.contatosSemana * 4}</span>
+            {/* Número: carvão forte / carvão 50% para o total */}
+            <span className="text-[13px] font-bold" style={{ color: "#23201F" }}>
+              {stats.mes}{" "}
+              <span style={{ color: "rgba(35,32,31,0.45)" }}>/ {meta.contatosSemana * 4}</span>
             </span>
           </div>
-          <div className="relative h-1.5 w-full overflow-hidden rounded-pill" style={{ background: "rgba(255,255,255,0.1)" }}>
+          {/* Track: carvão 15%; fill: branco com opacidade por desempenho */}
+          <div className="relative h-1.5 w-full overflow-hidden rounded-pill" style={{ background: "rgba(35,32,31,0.15)" }}>
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${Math.min(stats.pctMes, 100)}%` }}
               transition={{ duration: 0.85, ease: [0, 0, 0.2, 1], delay: delay + 0.2 }}
               className="h-full rounded-pill"
-              style={{ backgroundColor: paceColor }}
+              style={{ backgroundColor: barFill }}
             />
           </div>
         </div>
