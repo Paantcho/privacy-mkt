@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, ArrowRight, X } from "lucide-react";
+import { Clock, ArrowRight, X, ChevronDown, Check } from "lucide-react";
 import { ANALISTAS, CANAIS, STATUS_LIST, STATUS_STYLE, type Creator } from "@/types/creator";
 
 interface Props { creators: Creator[] }
@@ -32,49 +32,93 @@ const MONTHS = [
   "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro",
 ];
 
-/* ── Chip de filtro com scroll ──────────────────────────────────── */
-function FilterChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
-  return (
-    <motion.button
-      type="button"
-      onClick={onClick}
-      initial={false}
-      animate={{
-        backgroundColor: active ? "#23201F" : "rgba(0,0,0,0)",
-        color: active ? "#FFFFFF" : "#A08E7E",
-      }}
-      whileHover={!active ? { backgroundColor: "rgba(213,203,192,0.40)", color: "#23201F" } : undefined}
-      whileTap={{ scale: 0.96 }}
-      transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
-      className="shrink-0 rounded-[20px] px-3.5 py-1.5 text-[13px] font-bold whitespace-nowrap"
-    >
-      {label}
-    </motion.button>
-  );
-}
-
-/* ── Grupo de filtros com scroll horizontal ─────────────────────── */
-function FilterGroup({ label, children }: { label: string; children: React.ReactNode }) {
+/* ── Dropdown de filtro — carvão quando ativo ───────────────────── */
+function FilterDropdown({
+  label, options, value, onChange,
+}: {
+  label: string;
+  options: { label: string; value: string }[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const isActive = !!value;
+  const displayLabel = value ? options.find((o) => o.value === value)?.label ?? label : label;
+
+  useEffect(() => {
+    function onOut(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onOut);
+    return () => document.removeEventListener("mousedown", onOut);
+  }, []);
 
   return (
-    <div className="flex items-center gap-2 shrink-0">
-      <span className="shrink-0 text-[10px] font-bold uppercase tracking-[0.5px] text-[#C9B9A8]">
-        {label}
-      </span>
-      {/* Container com scroll horizontal e scrollbar invisível */}
-      <div
-        ref={ref}
-        className="flex items-center gap-0.5 overflow-x-auto rounded-[16px] px-1.5 py-1"
-        style={{
-          background: "rgba(35,32,31,0.05)",
-          scrollbarWidth: "none",
-          msOverflowStyle: "none",
-          WebkitOverflowScrolling: "touch",
+    <div ref={ref} className="relative shrink-0">
+      <motion.button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        initial={false}
+        animate={{
+          backgroundColor: isActive ? "#23201F" : "rgba(0,0,0,0)",
+          color: isActive ? "#FFFFFF" : "#A08E7E",
         }}
+        whileHover={!isActive ? { backgroundColor: "rgba(213,203,192,0.40)", color: "#23201F" } : undefined}
+        whileTap={{ scale: 0.97 }}
+        transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+        className="flex items-center gap-1.5 rounded-[20px] px-3.5 py-2 text-[13px] font-bold whitespace-nowrap"
       >
-        {children}
-      </div>
+        {displayLabel}
+        <motion.span
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
+          className="opacity-60"
+        >
+          <ChevronDown size={12} />
+        </motion.span>
+      </motion.button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -4, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.97 }}
+            transition={{ duration: 0.14, ease: [0, 0, 0.2, 1] }}
+            className="absolute left-0 top-full z-50 mt-1 min-w-[160px] overflow-hidden rounded-[14px] bg-white py-1.5"
+            style={{ border: "1px solid rgba(35,32,31,0.08)" }}
+          >
+            <motion.button
+              type="button"
+              onClick={() => { onChange(""); setOpen(false); }}
+              whileHover={{ backgroundColor: "#F4EEE5" }}
+              transition={{ duration: 0.1 }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-semibold text-[#A08E7E]"
+            >
+              <span className="w-4 shrink-0">
+                {!value && <Check size={12} className="text-primary-500" />}
+              </span>
+              Todos
+            </motion.button>
+            {options.map((opt) => (
+              <motion.button
+                key={opt.value}
+                type="button"
+                onClick={() => { onChange(opt.value === value ? "" : opt.value); setOpen(false); }}
+                whileHover={{ backgroundColor: "#F4EEE5" }}
+                transition={{ duration: 0.1 }}
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-semibold text-ink-500"
+              >
+                <span className="w-4 shrink-0">
+                  {opt.value === value && <Check size={12} className="text-primary-500" />}
+                </span>
+                {opt.label}
+              </motion.button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -136,63 +180,56 @@ export function TimelineClient({ creators }: Props) {
         </p>
       </div>
 
-      {/* ── Barra de filtros — scroll horizontal ─────────────────── */}
-      <div className="mb-4 rounded-[20px] bg-white p-3">
-        {/* Scroll container externo */}
+      {/* ── Barra de filtros — dropdowns em linha horizontal ────────── */}
+      <div className="mb-4 rounded-[20px] bg-white px-4 py-3">
         <div
-          className="flex items-center gap-4 overflow-x-auto pb-0.5"
+          className="flex items-center gap-2 overflow-x-auto"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
-          {/* Ano */}
-          <FilterGroup label="Ano">
-            {anosDisponiveis.map((a) => (
-              <FilterChip key={a} label={a} active={ano === a} onClick={() => setAno(ano === a ? "" : a)} />
-            ))}
-          </FilterGroup>
+          <FilterDropdown
+            label="Ano"
+            value={ano}
+            onChange={setAno}
+            options={anosDisponiveis.map((a) => ({ label: a, value: a }))}
+          />
 
-          {/* Separador */}
-          <div className="h-5 w-px shrink-0" style={{ background: "rgba(35,32,31,0.08)" }} />
+          <div className="h-4 w-px shrink-0" style={{ background: "rgba(35,32,31,0.10)" }} />
 
-          {/* Mês */}
-          <FilterGroup label="Mês">
-            {MONTHS.map((m, idx) => (
-              <FilterChip
-                key={idx}
-                label={m.slice(0, 3)}
-                active={mes === String(idx)}
-                onClick={() => setMes(mes === String(idx) ? "" : String(idx))}
-              />
-            ))}
-          </FilterGroup>
+          <FilterDropdown
+            label="Mês"
+            value={mes}
+            onChange={setMes}
+            options={MONTHS.map((m, idx) => ({ label: m, value: String(idx) }))}
+          />
 
-          <div className="h-5 w-px shrink-0" style={{ background: "rgba(35,32,31,0.08)" }} />
+          <div className="h-4 w-px shrink-0" style={{ background: "rgba(35,32,31,0.10)" }} />
 
-          {/* Canal */}
-          <FilterGroup label="Canal">
-            {CANAIS.map((c) => (
-              <FilterChip key={c} label={c} active={canal === c} onClick={() => setCanal(canal === c ? "" : c)} />
-            ))}
-          </FilterGroup>
+          <FilterDropdown
+            label="Canal"
+            value={canal}
+            onChange={setCanal}
+            options={CANAIS.map((c) => ({ label: c, value: c }))}
+          />
 
-          <div className="h-5 w-px shrink-0" style={{ background: "rgba(35,32,31,0.08)" }} />
+          <div className="h-4 w-px shrink-0" style={{ background: "rgba(35,32,31,0.10)" }} />
 
-          {/* Analista */}
-          <FilterGroup label="Analista">
-            {ANALISTAS.map((a) => (
-              <FilterChip key={a} label={a} active={analista === a} onClick={() => setAnalista(analista === a ? "" : a)} />
-            ))}
-          </FilterGroup>
+          <FilterDropdown
+            label="Analista"
+            value={analista}
+            onChange={setAnalista}
+            options={ANALISTAS.map((a) => ({ label: a, value: a }))}
+          />
 
-          <div className="h-5 w-px shrink-0" style={{ background: "rgba(35,32,31,0.08)" }} />
+          <div className="h-4 w-px shrink-0" style={{ background: "rgba(35,32,31,0.10)" }} />
 
-          {/* Status */}
-          <FilterGroup label="Status">
-            {STATUS_LIST.map((s) => (
-              <FilterChip key={s} label={s} active={status === s} onClick={() => setStatus(status === s ? "" : s)} />
-            ))}
-          </FilterGroup>
+          <FilterDropdown
+            label="Status"
+            value={status}
+            onChange={setStatus}
+            options={STATUS_LIST.map((s) => ({ label: s, value: s }))}
+          />
 
-          {/* Limpar */}
+          {/* Limpar filtros */}
           <AnimatePresence>
             {hasFilters && (
               <motion.button
@@ -201,9 +238,9 @@ export function TimelineClient({ creators }: Props) {
                 exit={{ opacity: 0, scale: 0.85 }}
                 type="button"
                 onClick={clearAll}
-                whileHover={{ backgroundColor: "rgba(239,68,68,0.08)", color: "#EF4444" }}
+                whileHover={{ color: "#23201F" }}
                 transition={{ duration: 0.15 }}
-                className="ml-2 flex shrink-0 items-center gap-1 rounded-[20px] px-3 py-1.5 text-[12px] font-bold text-[#A08E7E]"
+                className="ml-auto flex shrink-0 items-center gap-1 text-[12px] font-bold text-[#A08E7E] underline underline-offset-2"
               >
                 <X size={11} />
                 Limpar
@@ -212,21 +249,19 @@ export function TimelineClient({ creators }: Props) {
           </AnimatePresence>
         </div>
 
-        {/* Contador de resultados */}
+        {/* Contador quando filtrado */}
         <AnimatePresence>
           {hasFilters && (
-            <motion.div
+            <motion.p
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              className="mt-2 pt-2"
+              transition={{ duration: 0.18 }}
+              className="mt-2 pt-2 text-[12px] font-semibold text-[#A08E7E]"
               style={{ borderTop: "1px solid rgba(35,32,31,0.05)" }}
             >
-              <p className="text-[12px] font-semibold text-[#A08E7E]">
-                <span className="font-bold text-ink-500">{filtered.length}</span> de {creators.length} registros
-              </p>
-            </motion.div>
+              <span className="font-bold text-ink-500">{filtered.length}</span> de {creators.length} registros
+            </motion.p>
           )}
         </AnimatePresence>
       </div>
